@@ -1,5 +1,8 @@
 # GanaBaloto
 
+https://colab.research.google.com/drive/1-Z6C7nuVIf8nNdvRq__n3t72gtmsNyoP
+
+
 Con esta ejecucón de colab, le permite generar estadisticas de los números con mayor frecuencia de apariciones en los sorteos, también los números con más apariciones en los sorteos donde han habido ganadores del premio mayor.
 
 1. Le hace la pregunta si desea realizar una jugada manual de los números de su preferencia y calcula la probabilidad de acierto de la combinación basado en los historicos de todos los sorteos
