@@ -1,7 +1,7 @@
 # GanaBaloto
 
-https://colab.research.google.com/drive/1-Z6C7nuVIf8nNdvRq__n3t72gtmsNyoP
 
+<a href="https://colab.research.google.com/github/FIGARO79/GanaBaloto/blob/main/PowerBall.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
 
 Con esta ejecucón de colab, le permite generar estadisticas de los números con mayor frecuencia de apariciones en los sorteos, también los números con más apariciones en los sorteos donde han habido ganadores del premio mayor.
 
