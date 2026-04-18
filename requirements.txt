@@ -1,0 +1,6 @@
+pandas
+jax
+jaxlib
+openpyxl
+scipy
+ipython

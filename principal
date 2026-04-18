@@ -1,0 +1,651 @@
+Script iniciado en 2026-04-18 18:10:54-05:00 [TERM="xterm-256color" TTY="/dev/pts/6" COLUMNS="316" LINES="88"]
+[1m[7m%[27m[1m[0m                                                                                                                                                                                                                                                                                                                            [0m[27m[24m[J
+[1;36mGanaBaloto[0m on [1;35m main[0m [1;31m[✘!?][0m via [1;33m🐍 v3.12.13 (.venv) [0m
+[1;32m❯[0m [K[?1h=[?2004hc[1m[31mc[0m[39m[1m[31mc[1m[31ml[0m[39m[1m[31mc[1m[31ml[1m[31me[0m[39m[1m[31me[1m[31ma[0m[39m[1m[31ma[1m[31mr[0m[39m[0m[32mc[0m[32ml[0m[32me[0m[32ma[0m[32mr[39m[?1l>[?2004l
+[H[2J[3J[1m[7m%[27m[1m[0m                                                                                                                                                                                                                                                                                                                            [0m[27m[24m[J
+[1;36mGanaBaloto[0m on [1;35m main[0m [1;31m[✘!?][0m via [1;33m🐍 v3.12.13 (.venv) [0m
+[1;32m❯[0m [K[?1h=[?2004hclear[32mc[32ml[32me[32ma[32mr[39m[39m [39m [39m [39m [39m clear[32mc[32ml[32me[32ma[32mr[39m[32ma[39m[39m [1m[31mc[1m[31ml[1m[31me[1m[31ma[0m[39m[90mr[39m[1m[31me[0m[39m[0m[39m [39m [90mar[39m[1m[31mc[1m[31ml[0m[39m[0m[39m [39m [39m [90mear[39m[1m[31mc[0m[39m[0m[39m [39m [39m [39m [1m[31mc[0m[39m[90mlear[39m[0m[39m [39m [39m [39m [39m .[32m.[39m[32m.[32m/[39m[39m[4m.[39m[4m/[24m[4m.[4m/[4me[24m[4me[4mj[24m[4mj[4me[24m[4me[4mc[24m[4mc[4mu[24m[4mu[4mt[24m[4mt[4ma[24m[4ma[4mr[24m[4mr[4m_[24m[4m_[4mb[24m[4mb[4ma[24m[4ma[4ml[24m[4ml[4mo[24m[4mo[4mt[24m[4mt[4mo[24m[4mo[4m.[24m[4m.[4ms[24m[4ms[4mh[24m[20D[24m[32m.[24m[32m/[24m[32me[24m[32mj[24m[32me[24m[32mc[24m[32mu[24m[32mt[24m[32ma[24m[32mr[24m[32m_[24m[32mb[24m[32ma[24m[32ml[24m[32mo[24m[32mt[24m[32mo[24m[32m.[24m[32ms[24m[32mh[39m[?1l>[?2004l
+Iniciando GanaBaloto con entorno optimizado...
+[SISTEMA] Usando motor UV para máximo rendimiento.
+An NVIDIA GPU may be present on this machine, but a CUDA-enabled jaxlib is not installed. Falling back to cpu.
+
+[SISTEMA] Motor de cálculo: JAX (CPU detectada)
+--------------------------------------------------
+
+Procesando hoja: Baloto...
+
+Procesando hoja: Revancha...
+
+==================== RESULTADOS BALOTO ====================
+Última combinación: [21, 26, 32, 34, 40], SB: 12
+Combinaciones posibles: 15,401,568
+
+>>> [BALOTO] FRECUENCIAS GENERALES <<<
+              Top 1  Top 2  Top 3  Top 4  Top 5
+B1                1      2      3      6      5
+B2               11     14      8      9     12
+B3               25     20     22     24     21
+B4               34     35     37     36     32
+B5               43     42     41     40     39
+Super Balota     11     13      7     16      6
+
+>>> [BALOTO] PRUEBA CHI-CUADRADO <<<
+               Métrica Chi2 Stat p-value Interpretación
+0  Balotas Principales     27.86  0.9541      Aleatorio
+1         Super Balota     17.08  0.3143      Aleatorio
+
+>>> [BALOTO] NÚMEROS CALIENTES <<<
+              Caliente 1  Caliente 2  Caliente 3  Caliente 4  Caliente 5
+B1                     2           3           7         1.0         6.0
+B2                    11          26           7         9.0        14.0
+B3                    32          25          15        29.0        24.0
+B4                    34          35          32        28.0        19.0
+B5                    42          43          40        38.0        41.0
+Super Balota          10          12           9         NaN         NaN
+
+>>> [BALOTO] NÚMEROS FRÍOS <<<
+              Frío 1  Frío 2  Frío 3  Frío 4  Frío 5
+B1              28.0    29.0    30.0    32.0    33.0
+B2               1.0    36.0    38.0    39.0    40.0
+B3               1.0     2.0    41.0    42.0    43.0
+B4               1.0     2.0     3.0     4.0     6.0
+B5               1.0     2.0     3.0     4.0     5.0
+Super Balota     NaN     NaN     NaN     NaN     NaN
+
+>>> [BALOTO] TOP SUMAS <<<
+     Frecuencia
+127          23
+99           19
+121          19
+113          18
+112          18
+101          16
+115          16
+117          16
+105          15
+106          15
+
+>>> [BALOTO] PARIDAD <<<
+        Frecuencia
+(2, 3)         336
+(3, 2)         288
+(1, 4)         145
+(4, 1)         114
+(0, 5)          28
+(5, 0)          24
+
+>>> [BALOTO] GAP ANALYSIS (TOP 10) <<<
+   Número  Última Aparición (Main)  Brecha (Sorteos)  Última Aparición (SB)
+0       1                    933.0                 1                    NaN
+1       2                    907.0                27                    NaN
+2       3                    921.0                13                    NaN
+3       4                    922.0                12                    NaN
+4       5                    917.0                17                    NaN
+5       6                    931.0                 3                    NaN
+6       7                    933.0                 1                    NaN
+7       8                    918.0                16                    NaN
+8       9                    927.0                 7                    NaN
+9      10                    931.0                 3                    NaN
+
+==================== RESULTADOS REVANCHA ====================
+Última combinación: [13, 26, 32, 34, 39], SB: 15
+Combinaciones posibles: 15,401,568
+
+>>> [REVANCHA] FRECUENCIAS GENERALES <<<
+              Top 1  Top 2  Top 3  Top 4  Top 5
+B1                1      2      4      3      5
+B2               10      8     12     15      9
+B3               27     21     26     24     18
+B4               34     29     36     33     32
+B5               43     40     42     41     39
+Super Balota     12      3     10     14      9
+
+>>> [REVANCHA] PRUEBA CHI-CUADRADO <<<
+               Métrica Chi2 Stat p-value Interpretación
+0  Balotas Principales     32.62  0.8501      Aleatorio
+1         Super Balota     17.85  0.2706      Aleatorio
+
+>>> [REVANCHA] NÚMEROS CALIENTES <<<
+              Caliente 1  Caliente 2  Caliente 3  Caliente 4  Caliente 5
+B1                     5           1           4         6.0        12.0
+B2                    18           6          13        15.0        24.0
+B3                    25          27          22        21.0        23.0
+B4                    39          34          33        28.0        21.0
+B5                    43          41          42        39.0        40.0
+Super Balota          14           3          16         NaN         NaN
+
+>>> [REVANCHA] NÚMEROS FRÍOS <<<
+              Frío 1  Frío 2  Frío 3  Frío 4  Frío 5
+B1              28.0    30.0    32.0    33.0    34.0
+B2               1.0    35.0    37.0    38.0    41.0
+B3               1.0     3.0    43.0    40.0    41.0
+B4               1.0     2.0     3.0     6.0     7.0
+B5               1.0     2.0     3.0     4.0     5.0
+Super Balota     NaN     NaN     NaN     NaN     NaN
+
+>>> [REVANCHA] TOP SUMAS <<<
+     Frecuencia
+92           19
+102          19
+121          19
+117          18
+122          18
+96           17
+127          16
+115          15
+113          15
+97           15
+
+>>> [REVANCHA] PARIDAD <<<
+        Frecuencia
+(2, 3)         286
+(3, 2)         283
+(1, 4)         146
+(4, 1)         143
+(5, 0)          31
+(0, 5)          19
+
+>>> [REVANCHA] GAP ANALYSIS (TOP 10) <<<
+   Número  Última Aparición (Main)  Brecha (Sorteos)  Última Aparición (SB)
+0       1                    896.0                11                    NaN
+1       2                    890.0                17                    NaN
+2       3                    894.0                13                    NaN
+3       4                    906.0                 1                    NaN
+4       5                    898.0                 9                    NaN
+5       6                    904.0                 3                    NaN
+6       7                    905.0                 2                    NaN
+7       8                    895.0                12                    NaN
+8       9                    900.0                 7                    NaN
+9      10                    904.0                 3                    NaN
+
+--- MENÚ INTERACTIVO ---
+1. Jugada Manual
+2. Generación Automática
+3. Salir
+Seleccione una opción: 2
+
+¿Para qué sorteo?
+1. Baloto
+2. Revancha
+3. Ambos
+Seleccione: 3
+
+--- Generando para Baloto ---
+
+>>> SUGERENCIAS BALOTO <<<
+          Combinación  SB   Score
+0   5, 16, 27, 31, 38  13  0.1551
+1    8, 9, 27, 41, 43   9  0.1510
+2   2, 11, 37, 40, 42  12  0.1506
+3  14, 17, 19, 34, 36   6  0.1490
+4  13, 19, 21, 34, 36   9  0.1478
+5   1, 14, 25, 26, 33  15  0.1474
+6   3, 15, 22, 25, 31  14  0.1472
+7   4, 13, 22, 35, 36  12  0.1460
+8   1, 17, 20, 27, 33   5  0.1456
+9  12, 21, 23, 31, 40   5  0.1433
+
+--- Generando para Revancha ---
+
+>>> SUGERENCIAS REVANCHA <<<
+          Combinación  SB   Score
+0   5, 26, 29, 31, 34  13  0.1568
+1    2, 3, 15, 30, 39  10  0.1557
+2    1, 7, 23, 26, 35  14  0.1551
+3  12, 17, 25, 33, 35  10  0.1511
+4    1, 2, 33, 38, 40  16  0.1503
+5    4, 9, 19, 32, 38  16  0.1487
+6    6, 7, 24, 25, 32   7  0.1483
+7  13, 15, 18, 27, 39   8  0.1468
+8   8, 26, 27, 29, 32  11  0.1461
+9  10, 17, 21, 23, 43  16  0.1423
+
+--- MENÚ INTERACTIVO ---
+1. Jugada Manual
+2. Generación Automática
+3. Salir
+Seleccione una opción: 3
+
+Presiona [Enter] para salir...
+[1m[7m%[27m[1m[0m                                                                                                                                                                                                                                                                                                                            [0m[27m[24m[J
+[1;36mGanaBaloto[0m on [1;35m main[0m [1;31m[✘!?][0m via [1;33m🐍 v3.12.13 (.venv) [0mtook [1;33m31s[0m 
+[1;32m❯[0m [K[?1h=[?2004h./ejecutar_baloto.sh[20D[32m.[32m/[32me[32mj[32me[32mc[32mu[32mt[32ma[32mr[32m_[32mb[32ma[32ml[32mo[32mt[32mo[32m.[32ms[32mh[39m[20D[32mc[32ml[32me[32ma[32mr[39m[39m [39m [39m [39m [39m [39m [39m [39m [39m [39m [39m [39m [39m [39m [39m [15D[?1l>[?2004l
+[H[2J[3J[1m[7m%[27m[1m[0m                                                                                                                                                                                                                                                                                                                            [0m[27m[24m[J
+[1;36mGanaBaloto[0m on [1;35m main[0m [1;31m[✘!?][0m via [1;33m🐍 v3.12.13 (.venv) [0m
+[1;32m❯[0m [K[?1h=[?2004hclear[32mc[32ml[32me[32ma[32mr[39m[32m.[32m/[32me[32mj[32me[39mcutar_baloto.sh[16D[32me[32mc[32mu[32mt[32ma[32mr[32m_[32mb[32ma[32ml[32mo[32mt[32mo[32m.[32ms[32mh[39m[?1l>[?2004l
+Iniciando GanaBaloto con entorno optimizado...
+[SISTEMA] Usando motor UV para máximo rendimiento.
+An NVIDIA GPU may be present on this machine, but a CUDA-enabled jaxlib is not installed. Falling back to cpu.
+
+[SISTEMA] Motor de cálculo: JAX (CPU detectada)
+--------------------------------------------------
+
+Procesando hoja: Baloto...
+
+Procesando hoja: Revancha...
+
+==================== RESULTADOS BALOTO ====================
+Última combinación: [21, 26, 32, 34, 40], SB: 12
+Combinaciones posibles: 15,401,568
+
+>>> [BALOTO] FRECUENCIAS GENERALES <<<
+              Top 1  Top 2  Top 3  Top 4  Top 5
+B1                1      2      3      6      5
+B2               11     14      8      9     12
+B3               25     20     22     24     21
+B4               34     35     37     36     32
+B5               43     42     41     40     39
+Super Balota     11     13      7     16      6
+
+>>> [BALOTO] PRUEBA CHI-CUADRADO <<<
+               Métrica Chi2 Stat p-value Interpretación
+0  Balotas Principales     27.86  0.9541      Aleatorio
+1         Super Balota     17.08  0.3143      Aleatorio
+
+>>> [BALOTO] NÚMEROS CALIENTES <<<
+              Caliente 1  Caliente 2  Caliente 3  Caliente 4  Caliente 5
+B1                     2           3           7         1.0         6.0
+B2                    11          26           7         9.0        14.0
+B3                    32          25          15        29.0        24.0
+B4                    34          35          32        28.0        19.0
+B5                    42          43          40        38.0        41.0
+Super Balota          10          12           9         NaN         NaN
+
+>>> [BALOTO] NÚMEROS FRÍOS <<<
+              Frío 1  Frío 2  Frío 3  Frío 4  Frío 5
+B1              28.0    29.0    30.0    32.0    33.0
+B2               1.0    36.0    38.0    39.0    40.0
+B3               1.0     2.0    41.0    42.0    43.0
+B4               1.0     2.0     3.0     4.0     6.0
+B5               1.0     2.0     3.0     4.0     5.0
+Super Balota     NaN     NaN     NaN     NaN     NaN
+
+>>> [BALOTO] TOP SUMAS <<<
+     Frecuencia
+127          23
+99           19
+121          19
+113          18
+112          18
+101          16
+115          16
+117          16
+105          15
+106          15
+
+>>> [BALOTO] PARIDAD <<<
+        Frecuencia
+(2, 3)         336
+(3, 2)         288
+(1, 4)         145
+(4, 1)         114
+(0, 5)          28
+(5, 0)          24
+
+>>> [BALOTO] GAP ANALYSIS (TOP 10) <<<
+   Número  Última Aparición (Main)  Brecha (Sorteos)  Última Aparición (SB)
+0       1                    933.0                 1                    NaN
+1       2                    907.0                27                    NaN
+2       3                    921.0                13                    NaN
+3       4                    922.0                12                    NaN
+4       5                    917.0                17                    NaN
+5       6                    931.0                 3                    NaN
+6       7                    933.0                 1                    NaN
+7       8                    918.0                16                    NaN
+8       9                    927.0                 7                    NaN
+9      10                    931.0                 3                    NaN
+
+>>> [BALOTO] TOP 10 TRANSICIONES DE MARKOV <<<
+      Origen  Destino  Probabilidad
+1806      43        1      0.169355
+1763      42        1      0.166667
+793       19       20      0.160714
+1674      39       41      0.157407
+1409      33       34      0.150442
+311        8       11      0.145455
+1807      43        2      0.145161
+1541      36       37      0.144144
+3          1        4      0.141667
+268        7       11      0.141509
+
+==================== RESULTADOS REVANCHA ====================
+Última combinación: [13, 26, 32, 34, 39], SB: 15
+Combinaciones posibles: 15,401,568
+
+>>> [REVANCHA] FRECUENCIAS GENERALES <<<
+              Top 1  Top 2  Top 3  Top 4  Top 5
+B1                1      2      4      3      5
+B2               10      8     12     15      9
+B3               27     21     26     24     18
+B4               34     29     36     33     32
+B5               43     40     42     41     39
+Super Balota     12      3     10     14      9
+
+>>> [REVANCHA] PRUEBA CHI-CUADRADO <<<
+               Métrica Chi2 Stat p-value Interpretación
+0  Balotas Principales     32.62  0.8501      Aleatorio
+1         Super Balota     17.85  0.2706      Aleatorio
+
+>>> [REVANCHA] NÚMEROS CALIENTES <<<
+              Caliente 1  Caliente 2  Caliente 3  Caliente 4  Caliente 5
+B1                     5           1           4         6.0        12.0
+B2                    18           6          13        15.0        24.0
+B3                    25          27          22        21.0        23.0
+B4                    39          34          33        28.0        21.0
+B5                    43          41          42        39.0        40.0
+Super Balota          14           3          16         NaN         NaN
+
+>>> [REVANCHA] NÚMEROS FRÍOS <<<
+              Frío 1  Frío 2  Frío 3  Frío 4  Frío 5
+B1              28.0    30.0    32.0    33.0    34.0
+B2               1.0    35.0    37.0    38.0    41.0
+B3               1.0     3.0    43.0    40.0    41.0
+B4               1.0     2.0     3.0     6.0     7.0
+B5               1.0     2.0     3.0     4.0     5.0
+Super Balota     NaN     NaN     NaN     NaN     NaN
+
+>>> [REVANCHA] TOP SUMAS <<<
+     Frecuencia
+92           19
+102          19
+121          19
+117          18
+122          18
+96           17
+127          16
+115          15
+113          15
+97           15
+
+>>> [REVANCHA] PARIDAD <<<
+        Frecuencia
+(2, 3)         286
+(3, 2)         283
+(1, 4)         146
+(4, 1)         143
+(5, 0)          31
+(0, 5)          19
+
+>>> [REVANCHA] GAP ANALYSIS (TOP 10) <<<
+   Número  Última Aparición (Main)  Brecha (Sorteos)  Última Aparición (SB)
+0       1                    896.0                11                    NaN
+1       2                    890.0                17                    NaN
+2       3                    894.0                13                    NaN
+3       4                    906.0                 1                    NaN
+4       5                    898.0                 9                    NaN
+5       6                    904.0                 3                    NaN
+6       7                    905.0                 2                    NaN
+7       8                    895.0                12                    NaN
+8       9                    900.0                 7                    NaN
+9      10                    904.0                 3                    NaN
+
+>>> [REVANCHA] TOP 10 TRANSICIONES DE MARKOV <<<
+      Origen  Destino  Probabilidad
+353        9       10      0.164948
+1497      35       36      0.161616
+1322      31       33      0.160000
+136        4        8      0.147541
+1057      25       26      0.147059
+927       22       25      0.145455
+1233      29       30      0.141414
+1587      37       40      0.137615
+1541      36       37      0.136752
+1235      29       32      0.131313
+
+--- MENÚ INTERACTIVO ---
+1. Jugada Manual
+2. Generación Automática
+3. Salir
+Seleccione una opción: 3
+
+Presiona [Enter] para salir...
+[1m[7m%[27m[1m[0m                                                                                                                                                                                                                                                                                                                            [0m[27m[24m[J
+[1;36mGanaBaloto[0m on [1;35m main[0m [1;31m[✘!?][0m via [1;33m🐍 v3.12.13 (.venv) [0mtook [1;33m5m6s[0m 
+[1;32m❯[0m [K[?1h=[?2004h./ejecutar_baloto.sh[20D[32m.[32m/[32me[32mj[32me[32mc[32mu[32mt[32ma[32mr[32m_[32mb[32ma[32ml[32mo[32mt[32mo[32m.[32ms[32mh[39m[?1l>[?2004l
+Iniciando GanaBaloto con entorno optimizado...
+[SISTEMA] Usando motor UV para máximo rendimiento.
+An NVIDIA GPU may be present on this machine, but a CUDA-enabled jaxlib is not installed. Falling back to cpu.
+
+[SISTEMA] Motor de cálculo: JAX (CPU detectada)
+--------------------------------------------------
+
+Procesando hoja: Baloto...
+
+Procesando hoja: Revancha...
+
+==================== RESULTADOS BALOTO ====================
+Última combinación: [21, 26, 32, 34, 40], SB: 12
+Combinaciones posibles: 15,401,568
+
+>>> [BALOTO] FRECUENCIAS GENERALES <<<
+              Top 1  Top 2  Top 3  Top 4  Top 5
+B1                1      2      3      6      5
+B2               11     14      8      9     12
+B3               25     20     22     24     21
+B4               34     35     37     36     32
+B5               43     42     41     40     39
+Super Balota     11     13      7     16      6
+
+>>> [BALOTO] PRUEBA CHI-CUADRADO <<<
+               Métrica Chi2 Stat p-value Interpretación
+0  Balotas Principales     27.86  0.9541      Aleatorio
+1         Super Balota     17.08  0.3143      Aleatorio
+
+>>> [BALOTO] NÚMEROS CALIENTES <<<
+              Caliente 1  Caliente 2  Caliente 3  Caliente 4  Caliente 5
+B1                     2           3           7         1.0         6.0
+B2                    11          26           7         9.0        14.0
+B3                    32          25          15        29.0        24.0
+B4                    34          35          32        28.0        19.0
+B5                    42          43          40        38.0        41.0
+Super Balota          10          12           9         NaN         NaN
+
+>>> [BALOTO] NÚMEROS FRÍOS <<<
+              Frío 1  Frío 2  Frío 3  Frío 4  Frío 5
+B1              28.0    29.0    30.0    32.0    33.0
+B2               1.0    36.0    38.0    39.0    40.0
+B3               1.0     2.0    41.0    42.0    43.0
+B4               1.0     2.0     3.0     4.0     6.0
+B5               1.0     2.0     3.0     4.0     5.0
+Super Balota     NaN     NaN     NaN     NaN     NaN
+
+>>> [BALOTO] TOP SUMAS <<<
+     Frecuencia
+127          23
+99           19
+121          19
+113          18
+112          18
+101          16
+115          16
+117          16
+105          15
+106          15
+
+>>> [BALOTO] PARIDAD <<<
+        Frecuencia
+(2, 3)         336
+(3, 2)         288
+(1, 4)         145
+(4, 1)         114
+(0, 5)          28
+(5, 0)          24
+
+>>> [BALOTO] GAP ANALYSIS (TOP 10) <<<
+   Número  Última Aparición (Main)  Brecha (Sorteos)  Última Aparición (SB)
+0       1                    933.0                 1                    NaN
+1       2                    907.0                27                    NaN
+2       3                    921.0                13                    NaN
+3       4                    922.0                12                    NaN
+4       5                    917.0                17                    NaN
+5       6                    931.0                 3                    NaN
+6       7                    933.0                 1                    NaN
+7       8                    918.0                16                    NaN
+8       9                    927.0                 7                    NaN
+9      10                    931.0                 3                    NaN
+
+>>> [BALOTO] TOP 10 TRANSICIONES DE MARKOV <<<
+      Origen  Destino  Probabilidad
+1806      43        1      0.169355
+1763      42        1      0.166667
+793       19       20      0.160714
+1674      39       41      0.157407
+1409      33       34      0.150442
+311        8       11      0.145455
+1807      43        2      0.145161
+1541      36       37      0.144144
+3          1        4      0.141667
+268        7       11      0.141509
+
+==================== RESULTADOS REVANCHA ====================
+Última combinación: [13, 26, 32, 34, 39], SB: 15
+Combinaciones posibles: 15,401,568
+
+>>> [REVANCHA] FRECUENCIAS GENERALES <<<
+              Top 1  Top 2  Top 3  Top 4  Top 5
+B1                1      2      4      3      5
+B2               10      8     12     15      9
+B3               27     21     26     24     18
+B4               34     29     36     33     32
+B5               43     40     42     41     39
+Super Balota     12      3     10     14      9
+
+>>> [REVANCHA] PRUEBA CHI-CUADRADO <<<
+               Métrica Chi2 Stat p-value Interpretación
+0  Balotas Principales     32.62  0.8501      Aleatorio
+1         Super Balota     17.85  0.2706      Aleatorio
+
+>>> [REVANCHA] NÚMEROS CALIENTES <<<
+              Caliente 1  Caliente 2  Caliente 3  Caliente 4  Caliente 5
+B1                     5           1           4         6.0        12.0
+B2                    18           6          13        15.0        24.0
+B3                    25          27          22        21.0        23.0
+B4                    39          34          33        28.0        21.0
+B5                    43          41          42        39.0        40.0
+Super Balota          14           3          16         NaN         NaN
+
+>>> [REVANCHA] NÚMEROS FRÍOS <<<
+              Frío 1  Frío 2  Frío 3  Frío 4  Frío 5
+B1              28.0    30.0    32.0    33.0    34.0
+B2               1.0    35.0    37.0    38.0    41.0
+B3               1.0     3.0    43.0    40.0    41.0
+B4               1.0     2.0     3.0     6.0     7.0
+B5               1.0     2.0     3.0     4.0     5.0
+Super Balota     NaN     NaN     NaN     NaN     NaN
+
+>>> [REVANCHA] TOP SUMAS <<<
+     Frecuencia
+92           19
+102          19
+121          19
+117          18
+122          18
+96           17
+127          16
+115          15
+113          15
+97           15
+
+>>> [REVANCHA] PARIDAD <<<
+        Frecuencia
+(2, 3)         286
+(3, 2)         283
+(1, 4)         146
+(4, 1)         143
+(5, 0)          31
+(0, 5)          19
+
+>>> [REVANCHA] GAP ANALYSIS (TOP 10) <<<
+   Número  Última Aparición (Main)  Brecha (Sorteos)  Última Aparición (SB)
+0       1                    896.0                11                    NaN
+1       2                    890.0                17                    NaN
+2       3                    894.0                13                    NaN
+3       4                    906.0                 1                    NaN
+4       5                    898.0                 9                    NaN
+5       6                    904.0                 3                    NaN
+6       7                    905.0                 2                    NaN
+7       8                    895.0                12                    NaN
+8       9                    900.0                 7                    NaN
+9      10                    904.0                 3                    NaN
+
+>>> [REVANCHA] TOP 10 TRANSICIONES DE MARKOV <<<
+      Origen  Destino  Probabilidad
+353        9       10      0.164948
+1497      35       36      0.161616
+1322      31       33      0.160000
+136        4        8      0.147541
+1057      25       26      0.147059
+927       22       25      0.145455
+1233      29       30      0.141414
+1587      37       40      0.137615
+1541      36       37      0.136752
+1235      29       32      0.131313
+
+--- MENÚ INTERACTIVO ---
+1. Jugada Manual
+2. Generación Automática
+3. Salir
+Seleccione una opción: 1
+
+¿Para qué sorteo?
+1. Baloto
+2. Revancha
+3. Ambos
+Seleccione: 3
+
+--- Jugada Manual para Baloto ---
+Número 1 (1-43): 8
+Número 2 (1-43): 14 7
+Número 3 (1-43): 23
+Número 4 (1-43): 35
+Número 5 (1-43): 42
+Super Balota (1-16): 7
+Resultados Baloto: Score=0.1569, Prob. Markov=0.00001567
+
+--- Jugada Manual para Revancha ---
+Número 1 (1-43): 8
+Número 2 (1-43): 17
+Número 3 (1-43): 23
+Número 4 (1-43): 35
+Número 5 (1-43): 42
+Super Balota (1-16): 7
+Resultados Revancha: Score=0.1421, Prob. Markov=0.00000470
+
+--- MENÚ INTERACTIVO ---
+1. Jugada Manual
+2. Generación Automática
+3. Salir
+Seleccione una opción: 2
+
+¿Para qué sorteo?
+1. Baloto
+2. Revancha
+3. Ambos
+Seleccione: 3
+
+--- Generando para Baloto ---
+
+>>> SUGERENCIAS BALOTO <<<
+          Combinación  SB   Score
+0    5, 7, 20, 25, 41  16  0.1610
+1   6, 10, 15, 31, 41  13  0.1570
+2    1, 9, 16, 36, 37  16  0.1567
+3  16, 18, 19, 35, 39  16  0.1535
+4   2, 12, 14, 25, 41   5  0.1517
+5  11, 16, 23, 24, 33  16  0.1504
+6   5, 20, 21, 39, 40  14  0.1497
+7   8, 11, 27, 32, 43  14  0.1485
+8  10, 16, 31, 32, 33  10  0.1439
+9   9, 12, 17, 37, 41  15  0.1412
+
+--- Generando para Revancha ---
+
+>>> SUGERENCIAS REVANCHA <<<
+          Combinación  SB   Score
+0    1, 8, 12, 31, 40   9  0.1573
+1   1, 12, 23, 25, 31   3  0.1549
+2    1, 8, 19, 30, 43  13  0.1520
+3  11, 20, 23, 35, 36   9  0.1514
+4   3, 12, 16, 29, 40  16  0.1500
+5   1, 23, 24, 33, 34   8  0.1500
+6  14, 1
