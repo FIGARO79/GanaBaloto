@@ -26,21 +26,23 @@ Simplemente busca el archivo y haz doble clic en él:
 
 ---
 
-## 📈 Uso Manual
+## 📈 Uso y Documentación
 
-Si prefieres hacerlo paso a paso:
+Para ejecutar el análisis y generar combinaciones sugeridas, simplemente corre:
 
-1.  **Activar el entorno virtual**:
-    *   Linux/macOS: `source .venv/bin/activate`
-    *   Windows: `.venv\Scripts\activate`
-2.  **Instalar dependencias**:
-    ```bash
-    pip install -r requirements.txt
-    ```
-3.  **Ejecutar el script**:
-    ```bash
-    python3 ganabaloto.py
-    ```
+```bash
+python3 ganabaloto.py
+```
+
+### 📘 Guía de Análisis (¡Muy Importante!)
+Si no estás seguro de cómo interpretar los resultados (como el p-value, el Score JAX o el Gap Analysis), he preparado una guía detallada:
+
+👉 **[Leer Guía de Interpretación de Resultados](GUIA_ANALISIS.md)**
+
+En esta guía encontrarás ejemplos prácticos sobre:
+*   Cómo saber si un número está "maduro" para salir (Gap Analysis).
+*   Qué significa que el sorteo sea "Aleatorio" o tenga "Patrones".
+*   Cómo elegir la mejor combinación basada en el Score de frecuencia.
 
 ## 📁 Estructura del Proyecto
 
