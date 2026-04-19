@@ -593,8 +593,18 @@ def main():
                     
                     print(f"Nota: El Score promedio de los ganadores históricos de {ts} es: {score_meta:.4f}")
                     
-                    df_res = pd.DataFrame([( ", ".join(map(str, c[0])), c[1], f"{c[2]:.4f}", "⭐" if c[2] >= score_meta else "") for c in combs], 
-                                         columns=['Combinación', 'SB', 'Score', 'ADN Ganador'])
+                    data_res = []
+                    for comb, sb, score in combs:
+                        prob_m = calculate_sequence_probability(comb, r['df_transition_matrix'])
+                        data_res.append((
+                            ", ".join(map(str, comb)), 
+                            sb, 
+                            f"{score:.4f}", 
+                            f"{prob_m:.8f}",
+                            "⭐" if score >= score_meta else ""
+                        ))
+                    
+                    df_res = pd.DataFrame(data_res, columns=['Combinación', 'SB', 'Score', 'Prob. Markov', 'ADN Ganador'])
                     mostrar_resultado(df_res, f"Sugerencias {ts}")
 
         elif opc == '3': break
