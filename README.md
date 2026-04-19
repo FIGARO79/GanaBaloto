@@ -5,9 +5,10 @@ Este proyecto realiza un análisis estadístico avanzado de los sorteos históri
 ## 🚀 Funcionalidades Principales
 
 *   **Análisis Dual Simultáneo:** Procesa y compara datos de las hojas "Baloto" y "Revancha" en el mismo libro de Excel.
+*   **ADN de Ganadores (5+1):** Analiza las combinaciones que ya ganaron el premio mayor para extraer su "perfil estadístico" (Score y Markov).
 *   **Cadenas de Markov:** Analiza las transiciones entre números para identificar secuencias probables basadas en el historial específico de cada sorteo.
 *   **Prueba de Chi-cuadrado:** Validación científica de la aleatoriedad de los sorteos (Bondad de Ajuste).
-*   **Computación Acelerada:** Uso de **JAX** para el cálculo ultrarrápido de puntajes de frecuencia.
+*   **Indicador ADN Ganador (⭐):** Marca con una estrella las sugerencias que superan el Score promedio de los ganadores históricos.
 *   **Detección de Entorno:** Compatible con **Jupyter/Colab** (visualización HTML) y **Terminal/Consola** (texto limpio).
 
 ## 🛠️ Ejecución Rápida (Automática)
@@ -15,34 +16,21 @@ Este proyecto realiza un análisis estadístico avanzado de los sorteos históri
 He preparado scripts que configuran el entorno, instalan dependencias y ejecutan el programa automáticamente:
 
 ### 🐧 Linux / macOS
-Abre una terminal en la carpeta del proyecto y ejecuta:
 ```bash
 ./ejecutar_baloto.sh
 ```
 
 ### 🪟 Windows
-Simplemente busca el archivo y haz doble clic en él:
-`ejecutar_baloto.bat`
+Haz doble clic en: `ejecutar_baloto.bat`
 
 ---
 
-## 📈 Uso y Documentación
-
-Para ejecutar el análisis y generar combinaciones sugeridas, simplemente corre:
-
-```bash
-python3 ganabaloto.py
-```
+## 📈 Documentación
 
 ### 📘 Guía de Análisis (¡Muy Importante!)
-Si no estás seguro de cómo interpretar los resultados (como el p-value, el Score JAX o el Gap Analysis), he preparado una guía detallada:
+Si quieres entender qué significa el p-value, el Score JAX o la estrella (⭐) en tus resultados:
 
 👉 **[Leer Guía de Interpretación de Resultados](GUIA_ANALISIS.md)**
-
-En esta guía encontrarás ejemplos prácticos sobre:
-*   Cómo saber si un número está "maduro" para salir (Gap Analysis).
-*   Qué significa que el sorteo sea "Aleatorio" o tenga "Patrones".
-*   Cómo elegir la mejor combinación basada en el Score de frecuencia.
 
 ## 📁 Estructura del Proyecto
 
@@ -50,8 +38,7 @@ En esta guía encontrarás ejemplos prácticos sobre:
 *   `baloto.xlsx`: Base de datos histórica (Hojas: "Baloto" y "Revancha").
 *   `ejecutar_baloto.sh / .bat`: Scripts de automatización.
 *   `requirements.txt`: Lista de librerías necesarias.
-*   `README.md`: Documentación.
-*   `GUIA_ANALISIS.md`: Guía detallada para interpretar los resultados.
+*   `GUIA_ANALISIS.md`: Guía detallada de interpretación.
 
 ---
 *Nota: Este software es una herramienta de análisis estadístico basada en datos históricos y no garantiza premios en juegos de azar.*

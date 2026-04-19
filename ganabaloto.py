@@ -413,6 +413,59 @@ def analizar_sorteo(nombre_hoja, df):
 
     return res
 
+def analizar_ganadores_historicos(results):
+    """Analiza las combinaciones que han ganado el premio mayor (5+1)."""
+    if 'df' not in results or results['df'].empty:
+        return pd.DataFrame()
+
+    df = results['df']
+    if PRIZE_COLUMN not in df.columns:
+        return pd.DataFrame()
+
+    # Filtrar ganadores 5+1
+    ganadores = df[df[PRIZE_COLUMN] > 0].copy()
+    
+    if ganadores.empty:
+        return pd.DataFrame()
+
+    reporte = []
+    
+    # Preparar datos JAX
+    b_cols_jax = results['b_cols_jax']
+    sb_col_jax = results['sb_col_jax']
+    total_draws_jax_val = results['total_draws_jax_val']
+    transition_matrix = results['df_transition_matrix']
+
+    for _, row in ganadores.iterrows():
+        combination = sorted([int(row[col]) for col in COLUMNS_TO_ANALYZE])
+        sb = int(row[SUPER_BALOTA_COLUMN])
+        prize_value = row[PRIZE_COLUMN]
+        # Intentar obtener la fecha, si no existe usar 'N/A'
+        fecha = row.get('Fecha', row.get('FECHA', 'N/A'))
+        
+        # Calcular Score JAX
+        score = float(calculate_frequency_score_jax(
+            jnp.array(combination), 
+            jnp.array(sb), 
+            b_cols_jax, 
+            sb_col_jax, 
+            total_draws_jax_val
+        ))
+        
+        # Calcular Prob. Markov
+        prob_markov = calculate_sequence_probability(combination, transition_matrix)
+        
+        reporte.append({
+            'Fecha': fecha,
+            'Combinación': ", ".join(map(str, combination)),
+            'SB': sb,
+            'Valor Premio': prize_value,
+            'Score JAX': score,
+            'Prob. Markov': prob_markov
+        })
+        
+    return pd.DataFrame(reporte)
+
 def main():
     try:
         xls = pd.ExcelFile(FILE_PATH)
@@ -431,6 +484,12 @@ def main():
     for s in sheets:
         r = resultados[s]
         print(f"\n{'='*20} RESULTADOS {s.upper()} {'='*20}")
+        
+        # Reporte ADN de Ganadores
+        df_adn = analizar_ganadores_historicos(r)
+        if not df_adn.empty:
+            mostrar_resultado(df_adn, "ADN DE GANADORES (Histórico 5+1)", s)
+        
         print(f"Última combinación: {r['last_combination']}, SB: {r['last_sb']}")
         print(f"Combinaciones posibles: {r['total_combinations']:,}")
         
@@ -481,21 +540,49 @@ def main():
                     print(f"\n--- Jugada Manual para {ts} ---")
                     try:
                         nums = []
-                        for i in range(K_MAIN_BALLS):
-                            nums.append(int(input(f"Número {i+1} (1-{N_MAIN_BALLS}): ")))
-                        sb = int(input(f"Super Balota (1-{N_SUPER_BALOTA}): "))
+                        while len(nums) < K_MAIN_BALLS:
+                            try:
+                                n = int(input(f"Ingrese número {len(nums)+1} (1-{N_MAIN_BALLS}): "))
+                                if n < 1 or n > N_MAIN_BALLS:
+                                    print(f"❌ Error: El número debe estar entre 1 y {N_MAIN_BALLS}.")
+                                elif n in nums:
+                                    print(f"❌ Error: El número {n} ya fue ingresado. Elija uno diferente.")
+                                else:
+                                    nums.append(n)
+                            except ValueError:
+                                print("❌ Error: Por favor, ingrese un número entero válido.")
+                        
+                        sb = -1
+                        while sb < 1 or sb > N_SUPER_BALOTA:
+                            try:
+                                sb = int(input(f"Ingrese Super Balota (1-{N_SUPER_BALOTA}): "))
+                                if sb < 1 or sb > N_SUPER_BALOTA:
+                                    print(f"❌ Error: La Super Balota debe estar entre 1 y {N_SUPER_BALOTA}.")
+                            except ValueError:
+                                print("❌ Error: Por favor, ingrese un número entero válido.")
+                        
                         score = float(calculate_frequency_score_jax(jnp.array(nums), jnp.array(sb), 
                                                                    r['b_cols_jax'], r['sb_col_jax'], 
                                                                    r['total_draws_jax_val']))
                         prob = calculate_sequence_probability(sorted(nums), r['df_transition_matrix'])
-                        print(f"Resultados {ts}: Score={score:.4f}, Prob. Markov={prob:.8f}")
-                    except ValueError: print("Entrada inválida.")
+                        print(f"\n✅ Resultados {ts} para {sorted(nums)} + ({sb}):")
+                        print(f"   - Score JAX: {score:.4f}")
+                        print(f"   - Prob. Markov: {prob:.8f}")
+                    except Exception as e:
+                        print(f"❌ Ocurrió un error inesperado: {e}")
                 else:
                     print(f"\n--- Generando para {ts} ---")
                     weights = get_number_weights(r, N_MAIN_BALLS, N_SUPER_BALOTA)
                     combs = generate_probable_combinations(NUM_COMBINATIONS_TO_GENERATE, r, weights)
-                    df_res = pd.DataFrame([( ", ".join(map(str, c[0])), c[1], f"{c[2]:.4f}") for c in combs], 
-                                         columns=['Combinación', 'SB', 'Score'])
+                    
+                    # Calcular Score promedio de ganadores para referencia
+                    df_ganadores = analizar_ganadores_historicos(r)
+                    score_meta = df_ganadores['Score JAX'].mean() if not df_ganadores.empty else 0.1450
+                    
+                    print(f"Nota: El Score promedio de los ganadores históricos de {ts} es: {score_meta:.4f}")
+                    
+                    df_res = pd.DataFrame([( ", ".join(map(str, c[0])), c[1], f"{c[2]:.4f}", "⭐" if c[2] >= score_meta else "") for c in combs], 
+                                         columns=['Combinación', 'SB', 'Score', 'ADN Ganador'])
                     mostrar_resultado(df_res, f"Sugerencias {ts}")
 
         elif opc == '3': break
