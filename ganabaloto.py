@@ -499,7 +499,7 @@ def main():
             r['total_draws_jax_val']
         ))
         last_markov = calculate_sequence_probability(r['last_combination'], r['df_transition_matrix'])
-
+        print("\n")
         print(f"Última combinación: {r['last_combination']}, SB: {r['last_sb']}")
         print(f"   📊 Score JAX: {last_score:.4f}")
         print(f"   ⛓️ Prob. Markov: {last_markov:.8f}")
@@ -525,7 +525,8 @@ def main():
 
     # Parte Interactiva
     while True:
-        print("\n--- MENÚ INTERACTIVO ---")
+        print("")
+        print("--- MENÚ INTERACTIVO ---")
         print("1. Jugada Manual")
         print("2. Generación Automática")
         print("3. Salir")
