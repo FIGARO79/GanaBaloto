@@ -333,6 +333,12 @@ def analizar_sorteo(nombre_hoja, df):
     cands_sb = list(set(range(1, N_SUPER_BALOTA + 1)) - in_recent_sb)
     res['cold_numbers']["Super Balota"] = sorted(cands_sb, key=lambda x: df[df[SUPER_BALOTA_COLUMN] == x].index.max() if x in df[SUPER_BALOTA_COLUMN].unique() else -1)[:3]
 
+    # Estandarizar longitud de listas para evitar decimales (floats) por NaN
+    for k in res['hot_numbers']:
+        while len(res['hot_numbers'][k]) < 5: res['hot_numbers'][k].append('')
+    for k in res['cold_numbers']:
+        while len(res['cold_numbers'][k]) < 5: res['cold_numbers'][k].append('')
+
     res['df_hot_numbers'] = pd.DataFrame.from_dict(res['hot_numbers'], orient='index').rename(columns={i: f'Caliente {i+1}' for i in range(5)})
     res['df_cold_numbers'] = pd.DataFrame.from_dict(res['cold_numbers'], orient='index').rename(columns={i: f'Frío {i+1}' for i in range(5)})
 
@@ -459,7 +465,7 @@ def analizar_ganadores_historicos(results):
             'Fecha': fecha,
             'Combinación': ", ".join(map(str, combination)),
             'SB': sb,
-            'Valor Premio': prize_value,
+            'Valor Premio': f"{prize_value:,.0f}".replace(",", "."),
             'Score JAX': score,
             'Prob. Markov': prob_markov
         })
