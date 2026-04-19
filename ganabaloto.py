@@ -490,7 +490,19 @@ def main():
         if not df_adn.empty:
             mostrar_resultado(df_adn, "ADN DE GANADORES (Histórico 5+1)", s)
         
+        # Calcular Score y Markov para la última combinación
+        last_score = float(calculate_frequency_score_jax(
+            jnp.array(r['last_combination']), 
+            jnp.array(r['last_sb']), 
+            r['b_cols_jax'], 
+            r['sb_col_jax'], 
+            r['total_draws_jax_val']
+        ))
+        last_markov = calculate_sequence_probability(r['last_combination'], r['df_transition_matrix'])
+
         print(f"Última combinación: {r['last_combination']}, SB: {r['last_sb']}")
+        print(f"   📊 Score JAX: {last_score:.4f}")
+        print(f"   ⛓️ Prob. Markov: {last_markov:.8f}")
         print(f"Combinaciones posibles: {r['total_combinations']:,}")
         
         if not r['duplicates'].empty:
