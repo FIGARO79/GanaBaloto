@@ -53,6 +53,9 @@ if %USE_UV% EQU 1 (
 :: Ejecutar el script
 python ganabaloto.py
 
+:: Desactivar entorno virtual
+call deactivate
+
 echo.
-echo Presiona cualquier tecla para salir...
-pause > nul
+echo [INFO] El programa ha finalizado. Puedes cerrar esta ventana manualmente.
+powershell -NoExit

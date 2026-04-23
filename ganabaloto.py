@@ -614,7 +614,10 @@ def main():
                     df_res = pd.DataFrame(data_res, columns=['Combinación', 'SB', 'Score', 'Prob. Markov', 'ADN Ganador'])
                     mostrar_resultado(df_res, f"Sugerencias {ts}")
 
-        elif opc == '3': break
+        elif opc == '3':
+            print("\n¡Gracias por usar GanaBaloto! Saliendo...")
+            input("Presione Enter para finalizar...")
+            break
         else: print("Opción no válida.")
 
 if __name__ == "__main__":
