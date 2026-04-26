@@ -17,63 +17,101 @@ def obtener_resultados_baloto():
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'html.parser')
 
-        resultados = []
+        # 1. Encontrar todos los contenedores de números (bolas)
+        # En la web actual tienen la clase 'numeros-md-mov' o similar
+        contenedores = soup.find_all("div", class_=lambda x: x and 'numeros' in x.lower() and 'md-mov' in x.lower())
         
-        def extraer_datos(tipo):
-            seccion = soup.find(lambda tag: tag.name == "h2" and tipo in tag.text)
-            if not seccion:
-                seccion = soup.find(lambda tag: tag.name == "div" and tipo in tag.text)
-            
-            if seccion:
-                contenedor = seccion.find_parent('div')
-                bolas = contenedor.find_all(class_=lambda x: x and ('ball' in x.lower() or 'numero' in x.lower()))
-                if not bolas:
-                    bolas = contenedor.find_all('span')
-                
-                numeros = [b.text.strip() for b in bolas if b.text.strip().isdigit()]
-                
-                if len(numeros) >= 6:
-                    # Datos para la tabla visual
-                    n_principales = " - ".join(numeros[:5])
-                    super_balota = numeros[5]
-                    
-                    # Datos para el Excel (numéricos)
-                    datos_excel = [int(n) for n in numeros[:6]]
-                    
-                    # Buscar acumulado
-                    acumulado_text = contenedor.find(lambda tag: "acumulado" in tag.text.lower())
-                    acumulado = acumulado_text.text.strip() if acumulado_text else "No disponible"
-                    
-                    # Intentar extraer fecha del sorteo
-                    fecha_text = soup.find(lambda tag: "Sorteo" in tag.text and ("202" in tag.text))
-                    fecha_val = datetime.now().strftime('%d/%m/%Y') # Default
-                    if fecha_text:
-                        import re
-                        match = re.search(r'\d{2}/\d{2}/\d{4}', fecha_text.text)
-                        if match: fecha_val = match.group()
+        # Si no encuentra con esa clase específica, intentar una más general
+        if not contenedores:
+            contenedores = soup.find_all("div", class_=lambda x: x and 'numeros' in x.lower())
 
-                    return {
-                        "visual": {
-                            "Sorteo": f"**{tipo}**",
-                            "Números Ganadores": n_principales,
-                            "Súper Balota": super_balota,
-                            "Acumulado Próximo Sorteo": acumulado
-                        },
-                        "excel": {
-                            "Fecha": fecha_val,
-                            "B1": datos_excel[0], "B2": datos_excel[1], "B3": datos_excel[2], 
-                            "B4": datos_excel[3], "B5": datos_excel[4], "SB": datos_excel[5]
-                        }
-                    }
+        if len(contenedores) < 2:
+            print("[!] No se encontraron suficientes contenedores de números.")
             return None
 
-        res_baloto = extraer_datos("Baloto")
-        res_revancha = extraer_datos("Revancha")
+        # El primero suele ser Baloto, el segundo Revancha del último sorteo
+        datos_extraidos = []
+        for i, cont in enumerate(contenedores[:2]):
+            tipo = "Baloto" if i == 0 else "Revancha"
+            texto = cont.text.strip().replace(',', ' ')
+            numeros = [n.strip() for n in texto.split() if n.strip().isdigit()]
+            
+            if len(numeros) >= 6:
+                datos_extraidos.append({
+                    "tipo": tipo,
+                    "numeros": numeros[:6]
+                })
 
-        return {"Baloto": res_baloto, "Revancha": res_revancha}
+        if not datos_extraidos:
+            return None
+
+        # 2. Extraer Acumulados
+        # Buscamos en todo el texto de la página para mayor fiabilidad
+        texto_completo = soup.get_text()
+        acumulados = {"Baloto": "No disponible", "Revancha": "No disponible"}
+        
+        import re
+        # Buscar el bloque que contiene "próximo sorteo" (con o sin tilde) y los valores
+        # Permitimos espacio opcional después del signo $
+        bloque_acumulado = re.search(r'pr.ximo sorteo.*?Baloto:?\s*(\$\s?[\d,.]+\s*millones).*?Revancha:?\s*(\$\s?[\d,.]+\s*millones)', texto_completo, re.IGNORECASE | re.DOTALL)
+        if bloque_acumulado:
+            acumulados["Baloto"] = bloque_acumulado.group(1)
+            acumulados["Revancha"] = bloque_acumulado.group(2)
+        else:
+            # Búsqueda individual buscando valores altos
+            for tipo in ["Baloto", "Revancha"]:
+                matches = re.finditer(fr"{tipo}:?\s*(\$\s?[\d,.]+\s*(?:millones|mil millones)?)", texto_completo, re.IGNORECASE)
+                for m in matches:
+                    val_str = m.group(1)
+                    if "4.000" not in val_str and "1.000" not in val_str and "2.000" not in val_str and "500" not in val_str:
+                        acumulados[tipo] = val_str
+                        break
+                if acumulados[tipo] == "No disponible":
+                    match = re.search(fr"{tipo}:?\s*(\$\s?[\d,.]+\s*(?:millones|mil millones)?)", texto_completo, re.IGNORECASE)
+                    if match: acumulados[tipo] = match.group(1)
+
+        # 3. Extraer Fecha del Sorteo
+        fecha_val = datetime.now().strftime('%d/%m/%Y')
+        # Buscar "Sorteo XXXX del día Sábado 25 de Abril de 2026" o similares
+        match_fecha_completa = re.search(r'(\d{1,2}) de (\w+) de (\d{4})', texto_completo, re.IGNORECASE)
+        if match_fecha_completa:
+            meses = {"enero": "01", "febrero": "02", "marzo": "03", "abril": "04", "mayo": "05", "junio": "06", 
+                     "julio": "07", "agosto": "08", "septiembre": "09", "octubre": "10", "noviembre": "11", "diciembre": "12"}
+            dia = match_fecha_completa.group(1).zfill(2)
+            mes = meses.get(match_fecha_completa.group(2).lower(), "01")
+            anio = match_fecha_completa.group(3)
+            fecha_val = f"{dia}/{mes}/{anio}"
+        else:
+            # Buscar formato DD/MM/YYYY
+            match_std = re.search(r'(\d{2}/\d{2}/\d{4})', texto_completo)
+            if match_std:
+                fecha_val = match_std.group(1)
+
+        # 4. Formatear resultados finales
+        resultados = {"Baloto": None, "Revancha": None}
+        for item in datos_extraidos:
+            tipo = item["tipo"]
+            numeros = item["numeros"]
+            resultados[tipo] = {
+                "visual": {
+                    "Sorteo": f"**{tipo}**",
+                    "Números Ganadores": " - ".join(numeros[:5]),
+                    "Súper Balota": numeros[5],
+                    "Acumulado Próximo Sorteo": acumulados[tipo]
+                },
+                "excel": {
+                    "Fecha": fecha_val,
+                    "B1": int(numeros[0]), "B2": int(numeros[1]), "B3": int(numeros[2]), 
+                    "B4": int(numeros[3]), "B5": int(numeros[4]), "SB": int(numeros[5])
+                }
+            }
+        
+        return resultados
 
     except Exception as e:
         print(f"Error al conectar con la fuente: {e}")
+        import traceback
+        traceback.print_exc()
         return None
 
 def actualizar_excel(datos_dict):
