@@ -2,26 +2,26 @@
 
 Este proyecto realiza un análisis estadístico avanzado de los sorteos históricos de **Baloto** y **Revancha** (Colombia) para generar combinaciones con mayor probabilidad histórica, integrando modelos de **Cadenas de Markov**, pruebas de aleatoriedad y computación acelerada con **JAX**.
 
-## 🚀 Funcionalidades Principales
-
-*   **Análisis Dual Simultáneo:** Procesa y compara datos de las hojas "Baloto" y "Revancha" en el mismo libro de Excel.
-*   **ADN de Ganadores (5+1):** Analiza las combinaciones que ya ganaron el premio mayor para extraer su "perfil estadístico" (Score y Markov).
-*   **Cadenas de Markov:** Analiza las transiciones entre números para identificar secuencias probables basadas en el historial específico de cada sorteo.
-*   **Prueba de Chi-cuadrado:** Validación científica de la aleatoriedad de los sorteos (Bondad de Ajuste).
-*   **Indicador ADN Ganador (⭐):** Marca con una estrella las sugerencias que superan el Score promedio de los ganadores históricos.
-*   **Detección de Entorno:** Compatible con **Jupyter/Colab** (visualización HTML) y **Terminal/Consola** (texto limpio).
-
-## 🛠️ Ejecución Rápida (Automática)
+## 🚀 Instalación y Ejecución
 
 He preparado scripts que configuran el entorno, instalan dependencias y ejecutan el programa automáticamente:
 
-### 🐧 Linux / macOS
-```bash
-./ejecutar_baloto.sh
-```
+### 1️⃣ Instalación Inicial (Solo la primera vez)
+Este paso crea el entorno virtual e instala todas las librerías necesarias.
 
-### 🪟 Windows
-Haz doble clic en: `ejecutar_baloto.bat`
+*   **Windows:** Haz doble clic en `instalar.bat`
+*   **Linux / macOS:** `./instalar.sh`
+
+### 2️⃣ Ejecución Diaria
+Una vez instalado, tienes dos opciones:
+
+*   **Actualizar Resultados (Web):** Si quieres descargar los últimos sorteos antes de analizar.
+    *   Windows: `actualizar.bat`
+    *   Linux/macOS: `./actualizar.sh`
+
+*   **Ejecutar Análisis:** Abre el programa principal para generar jugadas.
+    *   Windows: `ejecutar_baloto.bat`
+    *   Linux/macOS: `./ejecutar_baloto.sh`
 
 ---
 
