@@ -18,18 +18,18 @@ def extraer_premios(soup):
             rows = tables[i].find_all(['tr', 'row'])
             for row in rows:
                 cols = row.find_all('td')
-                if len(cols) < 2: continue
+                if len(cols) < 3: continue
                 texto_aciertos = cols[0].text.strip().lower()
-                ganadores = cols[1].text.strip().replace('.', '').replace(',', '')
+                monto = cols[2].text.strip().replace('$', '').replace('.', '').replace(',', '')
                 try:
-                    num_ganadores = int(ganadores)
+                    monto_premio = int(monto)
                 except ValueError:
-                    num_ganadores = 0
+                    monto_premio = 0
                 
                 if "5 + sb" in texto_aciertos or "5+sb" in texto_aciertos.replace(' ', ''):
-                    premios[tipo]["5+1"] = num_ganadores
+                    premios[tipo]["5+1"] = monto_premio
                 elif "5 aciertos" in texto_aciertos and "sb" not in texto_aciertos:
-                    premios[tipo]["5+0"] = num_ganadores
+                    premios[tipo]["5+0"] = monto_premio
     return premios
 
 def obtener_todos_los_resultados():
@@ -169,7 +169,7 @@ def presentar_resumen(lista_resultados):
             "Fecha": r["Fecha"],
             "Baloto": " - ".join(r["Baloto"]["numeros"][:5]) + " [" + r["Baloto"]["numeros"][5] + "]",
             "Revancha": " - ".join(r["Revancha"]["numeros"][:5]) + " [" + r["Revancha"]["numeros"][5] + "]",
-            "Premios Baloto (5+1 / 5+0)": f"{r['Baloto']['p51']} / {r['Baloto']['p50']}"
+            "Premios Baloto (5+1 / 5+0)": f"${r['Baloto']['p51']:,} / ${r['Baloto']['p50']:,}".replace(',', '.')
         })
     
     df_resumen = pd.DataFrame(resumen)
