@@ -170,7 +170,7 @@ def get_number_weights(results, n_main_balls, n_super_balota):
         top_cold = valid_gaps.sort_values(by='Brecha (Sorteos)', ascending=False).head(5)
         for _, row in top_cold.iterrows():
             num = row['Número']
-            key = 'sb' if row['Última Aparición (Main)'] == row['Última Aparición (SB)'] else 'main'
+            key = 'sb' if row.get('Tipo') == 'SB' else 'main'
             weights[(key, num)] += 0.1
 
     # Markov
@@ -379,10 +379,10 @@ def analizar_sorteo(nombre_hoja, df):
     gaps = []
     for n in range(1, N_MAIN_BALLS + 1):
         last = df.index[df[COLUMNS_TO_ANALYZE].isin([n]).any(axis=1)].max()
-        gaps.append({'Número': n, 'Última Aparición (Main)': last, 'Brecha (Sorteos)': curr-last if pd.notna(last) else 'N/A'})
+        gaps.append({'Tipo': 'Main', 'Número': n, 'Última Aparición': last, 'Brecha (Sorteos)': curr-last if pd.notna(last) else 'N/A'})
     for n in range(1, N_SUPER_BALOTA + 1):
         last = df.index[df[SUPER_BALOTA_COLUMN] == n].max()
-        gaps.append({'Número': n, 'Última Aparición (SB)': last, 'Brecha (Sorteos)': curr-last if pd.notna(last) else 'N/A'})
+        gaps.append({'Tipo': 'SB', 'Número': n, 'Última Aparición': last, 'Brecha (Sorteos)': curr-last if pd.notna(last) else 'N/A'})
     res['df_gap_analysis'] = pd.DataFrame(gaps)
 
     # Decenas
