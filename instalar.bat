@@ -60,10 +60,20 @@ echo [4/4] Instalando librerias (esto puede tardar un momento)...
 if %USE_UV% EQU 1 (
     call .venv\Scripts\activate
     uv pip install -r requirements.txt
+    nvidia-smi >nul 2>&1
+    if !ERRORLEVEL! EQU 0 (
+        echo [INFO] GPU NVIDIA detectada. Instalando soporte CUDA para JAX...
+        uv pip install "jax[cuda12]"
+    )
 ) else (
     call .venv\Scripts\activate
     python -m pip install --upgrade pip
     python -m pip install -r requirements.txt
+    nvidia-smi >nul 2>&1
+    if !ERRORLEVEL! EQU 0 (
+        echo [INFO] GPU NVIDIA detectada. Instalando soporte CUDA para JAX...
+        python -m pip install "jax[cuda12]"
+    )
 )
 echo [OK] Dependencias instaladas.
 

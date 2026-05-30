@@ -65,9 +65,17 @@ source .venv/bin/activate
 
 if [ $USE_UV -eq 1 ]; then
     uv pip install -r requirements.txt
+    if command -v nvidia-smi &> /dev/null; then
+        echo "[INFO] GPU NVIDIA detectada. Instalando soporte CUDA para JAX..."
+        uv pip install "jax[cuda12]"
+    fi
 else
     $PYTHON_CMD -m pip install --upgrade pip
     $PYTHON_CMD -m pip install -r requirements.txt
+    if command -v nvidia-smi &> /dev/null; then
+        echo "[INFO] GPU NVIDIA detectada. Instalando soporte CUDA para JAX..."
+        $PYTHON_CMD -m pip install "jax[cuda12]"
+    fi
 fi
 echo "[OK] Dependencias instaladas."
 
