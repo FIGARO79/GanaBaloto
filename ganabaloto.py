@@ -13,7 +13,7 @@ import os
 os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
 # Silenciar advertencias de hardware (GPU/TPU)
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
-os.environ["JAX_PLATFORMS"] = "" # Permite que JAX elija la mejor disponible sin forzar errores
+os.environ["JAX_PLATFORMS"] = ""  # Permite que JAX elija la mejor disponible sin forzar errores
 
 # Importar librerías necesarias
 import pandas as pd
@@ -26,6 +26,7 @@ from collections import defaultdict
 from scipy import stats
 import re
 import html
+from datetime import datetime
 
 # Reportar dispositivo en uso
 try:
@@ -118,6 +119,30 @@ def calculate_sequence_probability(sequence, transition_matrix):
             return 0.0
     return probability
 
+def calculate_positional_markov_probability(combination, sb, positional_matrices, last_combination, last_sb):
+    """Calcula la probabilidad usando cadenas de Markov posicionales (B1→B1, B2→B2, etc.)."""
+    probability = 1.0
+    all_cols = COLUMNS_TO_ANALYZE + [SUPER_BALOTA_COLUMN]
+    current_vals = list(combination) + [sb]
+    previous_vals = list(last_combination) + [last_sb]
+
+    for i, col in enumerate(all_cols):
+        matrix = positional_matrices.get(col)
+        if matrix is None or matrix.empty:
+            continue
+        prev_num = previous_vals[i]
+        curr_num = current_vals[i]
+        if prev_num in matrix.index and curr_num in matrix.columns:
+            prob = matrix.loc[prev_num, curr_num]
+            if prob > 0:
+                probability *= prob
+            else:
+                probability *= 1e-10
+        else:
+            probability *= 1e-10
+
+    return probability
+
 def get_number_weights(results, n_main_balls, n_super_balota):
     """Asigna pesos a los números basados en las métricas calculadas."""
     weights = defaultdict(float)
@@ -173,12 +198,36 @@ def get_number_weights(results, n_main_balls, n_super_balota):
             key = 'sb' if row.get('Tipo') == 'SB' else 'main'
             weights[(key, num)] += 0.1
 
-    # Markov
+    # Markov Global
     if not results['df_transition_matrix'].empty:
         incoming_sum = results['df_transition_matrix'].sum(axis=0)
         max_incoming = incoming_sum.max() if incoming_sum.max() > 0 else 1
         for num, prob_sum in incoming_sum.items():
             weights[('main', num)] += (prob_sum / max_incoming) * 0.3
+
+    # Markov Posicional: pondera según transiciones del último sorteo por posición
+    if 'positional_matrices' in results and results.get('last_combination'):
+        last_combo = results['last_combination']
+        last_sb_val = results['last_sb']
+        for i, col in enumerate(COLUMNS_TO_ANALYZE):
+            matrix = results['positional_matrices'].get(col)
+            if matrix is not None and not matrix.empty:
+                prev_num = last_combo[i]
+                if prev_num in matrix.index:
+                    probs = matrix.loc[prev_num]
+                    max_prob = probs.max() if probs.max() > 0 else 1
+                    for num in range(1, n_main_balls + 1):
+                        if num in probs.index and probs[num] > 0:
+                            weights[('main', num)] += (probs[num] / max_prob) * 0.25
+        # SB posicional
+        sb_matrix = results['positional_matrices'].get(SUPER_BALOTA_COLUMN)
+        if sb_matrix is not None and not sb_matrix.empty:
+            if last_sb_val in sb_matrix.index:
+                sb_probs = sb_matrix.loc[last_sb_val]
+                max_sb_prob = sb_probs.max() if sb_probs.max() > 0 else 1
+                for num in range(1, n_super_balota + 1):
+                    if num in sb_probs.index and sb_probs[num] > 0:
+                        weights[('sb', num)] += (sb_probs[num] / max_sb_prob) * 0.25
 
     return weights
 
@@ -203,12 +252,55 @@ def generate_probable_combinations(num_combinations, results, weights):
     all_main_numbers_list = results['all_main_numbers_list']
     markov_possible = not transition_matrix.empty and len(all_main_numbers_list) > 0
 
+    # Markov Posicional
+    positional_matrices = results.get('positional_matrices', {})
+    last_combination = results.get('last_combination', [])
+    last_sb_val = results.get('last_sb', 0)
+    positional_markov_possible = bool(positional_matrices) and len(last_combination) == K_MAIN_BALLS
+
     while len(generated) < num_combinations and attempts < max_attempts:
         attempts += 1
         combination = []
         sb = None
 
-        if markov_possible and random.random() < 0.7: # 70% chance to try Markov
+        roll = random.random()
+
+        # Markov Posicional (40%): genera cada posición basándose en el último sorteo
+        if positional_markov_possible and roll < 0.4:
+            try:
+                combo = []
+                for i, col in enumerate(COLUMNS_TO_ANALYZE):
+                    matrix = positional_matrices[col]
+                    prev_num = last_combination[i]
+                    if prev_num in matrix.index:
+                        probs = matrix.loc[prev_num].copy()
+                        # Excluir números ya elegidos para evitar duplicados
+                        for chosen in combo:
+                            if chosen in probs.index:
+                                probs[chosen] = 0
+                        if probs.sum() > 0:
+                            next_num = random.choices(probs.index.tolist(), weights=probs.values.tolist(), k=1)[0]
+                            combo.append(next_num)
+                        else:
+                            break
+                    else:
+                        break
+
+                if len(combo) == K_MAIN_BALLS:
+                    combination = sorted(combo)
+                    # SB posicional
+                    sb_matrix = positional_matrices.get(SUPER_BALOTA_COLUMN)
+                    if sb_matrix is not None and last_sb_val in sb_matrix.index:
+                        sb_probs = sb_matrix.loc[last_sb_val]
+                        if sb_probs.sum() > 0:
+                            sb = random.choices(sb_probs.index.tolist(), weights=sb_probs.values.tolist(), k=1)[0]
+                    if sb is None:
+                        sb = random.choices(sb_numbers, weights=sb_weights, k=1)[0]
+            except:
+                positional_markov_possible = False
+
+        # Markov Global (30%): camina por la cadena de transiciones globales
+        elif markov_possible and roll < 0.7:
             try:
                 current_num = random.choice(all_main_numbers_list)
                 seq = [current_num]
@@ -408,6 +500,27 @@ def analizar_sorteo(nombre_hoja, df):
         matrix[cur] = {n: c/tot for n, c in nexts.items()}
     res['df_transition_matrix'] = pd.DataFrame(matrix).T.reindex(index=range(1, N_MAIN_BALLS+1), columns=range(1, N_MAIN_BALLS+1)).fillna(0)
 
+    # Markov Posicional (B1→B1, B2→B2, etc.)
+    positional_matrices = {}
+    for col in COLUMNS_TO_ANALYZE + [SUPER_BALOTA_COLUMN]:
+        pos_trans = defaultdict(lambda: defaultdict(int))
+        col_values = df[col].values
+        for i in range(len(col_values) - 1):
+            pos_trans[int(col_values[i])][int(col_values[i+1])] += 1
+
+        pos_matrix = {}
+        for cur, nexts in pos_trans.items():
+            tot = sum(nexts.values())
+            pos_matrix[cur] = {n: c / tot for n, c in nexts.items()}
+
+        max_range = N_SUPER_BALOTA if col == SUPER_BALOTA_COLUMN else N_MAIN_BALLS
+        positional_matrices[col] = pd.DataFrame(pos_matrix).T.reindex(
+            index=range(1, max_range + 1),
+            columns=range(1, max_range + 1)
+        ).fillna(0)
+
+    res['positional_matrices'] = positional_matrices
+
     # JAX Prep
     try:
         res['b_cols_jax'] = [jnp.array(df[col].values) for col in COLUMNS_TO_ANALYZE]
@@ -481,6 +594,8 @@ def main():
         return
 
     resultados = {}
+    historial_sesion = []  # Acumula resultados para exportar a TXT
+
     for s in sheets:
         print(f"\nProcesando hoja: {s}...")
         df = pd.read_excel(FILE_PATH, sheet_name=s)
@@ -489,12 +604,16 @@ def main():
     # Visualización
     for s in sheets:
         r = resultados[s]
-        print(f"\n{'='*20} RESULTADOS {s.upper()} {'='*20}")
+        encabezado = f"{'='*20} RESULTADOS {s.upper()} {'='*20}"
+        print(f"\n{encabezado}")
+        historial_sesion.append(f"\n{encabezado}")
         
         # Reporte ADN de Ganadores
         df_adn = analizar_ganadores_historicos(r)
         if not df_adn.empty:
             mostrar_resultado(df_adn, "ADN DE GANADORES (Histórico 5+1)", s)
+            historial_sesion.append(f"\n>>> [{s.upper()}] ADN DE GANADORES (HISTÓRICO 5+1) <<<")
+            historial_sesion.append(df_adn.to_string())
         
         # Calcular Score y Markov para la última combinación
         last_score = float(calculate_frequency_score_jax(
@@ -510,14 +629,28 @@ def main():
         print(f"   📊 Score JAX: {last_score:.4f}")
         print(f"   ⛓️ Prob. Markov: {last_markov:.8f}")
         print(f"Combinaciones posibles: {r['total_combinations']:,}")
+
+        historial_sesion.append(f"\nÚltima combinación: {r['last_combination']}, SB: {r['last_sb']}")
+        historial_sesion.append(f"   Score JAX: {last_score:.4f}")
+        historial_sesion.append(f"   Prob. Markov: {last_markov:.8f}")
+        historial_sesion.append(f"Combinaciones posibles: {r['total_combinations']:,}")
         
         if not r['duplicates'].empty:
             mostrar_resultado(r['duplicates'], "Duplicados", s)
         
         mostrar_resultado(r['df_all_draws'], "Frecuencias Generales", s)
+        historial_sesion.append(f"\n>>> [{s.upper()}] FRECUENCIAS GENERALES <<<")
+        historial_sesion.append(r['df_all_draws'].to_string())
+
         mostrar_resultado(r['df_chi2'], "Prueba Chi-cuadrado", s)
         mostrar_resultado(r['df_hot_numbers'], "Números Calientes", s)
+        historial_sesion.append(f"\n>>> [{s.upper()}] NÚMEROS CALIENTES <<<")
+        historial_sesion.append(r['df_hot_numbers'].to_string())
+
         mostrar_resultado(r['df_cold_numbers'], "Números Fríos", s)
+        historial_sesion.append(f"\n>>> [{s.upper()}] NÚMEROS FRÍOS <<<")
+        historial_sesion.append(r['df_cold_numbers'].to_string())
+
         mostrar_resultado(r['df_sum_frequencies'], "Top Sumas", s)
         mostrar_resultado(r['df_parity_frequencies'], "Paridad", s)
         mostrar_resultado(r['df_gap_analysis'].head(10), "Gap Analysis (Top 10)", s)
@@ -528,6 +661,42 @@ def main():
             melted.columns = ['Origen', 'Destino', 'Probabilidad']
             top_markov = melted[melted['Probabilidad'] > 0].sort_values(by='Probabilidad', ascending=False).head(10)
             mostrar_resultado(top_markov, "Top 10 Transiciones de Markov", s)
+            historial_sesion.append(f"\n>>> [{s.upper()}] TOP 10 TRANSICIONES DE MARKOV <<<")
+            historial_sesion.append(top_markov.to_string(index=False))
+
+        # Predicciones Markov Posicional para el próximo sorteo
+        if 'positional_matrices' in r:
+            pos_top_data = []
+            for idx, col in enumerate(COLUMNS_TO_ANALYZE):
+                matrix = r['positional_matrices'][col]
+                last_val = r['last_combination'][idx]
+                if last_val in matrix.index:
+                    probs = matrix.loc[last_val].sort_values(ascending=False).head(3)
+                    for dest, prob in probs.items():
+                        if prob > 0:
+                            pos_top_data.append({
+                                'Posición': col,
+                                'Último': int(last_val),
+                                'Siguiente Probable': int(dest),
+                                'Probabilidad': f"{prob:.4f}"
+                            })
+            # SB posicional
+            sb_matrix = r['positional_matrices'].get(SUPER_BALOTA_COLUMN)
+            if sb_matrix is not None and r['last_sb'] in sb_matrix.index:
+                sb_probs = sb_matrix.loc[r['last_sb']].sort_values(ascending=False).head(3)
+                for dest, prob in sb_probs.items():
+                    if prob > 0:
+                        pos_top_data.append({
+                            'Posición': 'SB',
+                            'Último': int(r['last_sb']),
+                            'Siguiente Probable': int(dest),
+                            'Probabilidad': f"{prob:.4f}"
+                        })
+            if pos_top_data:
+                df_pos = pd.DataFrame(pos_top_data)
+                mostrar_resultado(df_pos, "🔮 Predicciones Markov Posicional (próximo sorteo)", s)
+                historial_sesion.append(f"\n>>> [{s.upper()}] PREDICCIONES MARKOV POSICIONAL (PRÓXIMO SORTEO) <<<")
+                historial_sesion.append(df_pos.to_string(index=False))
 
     # Parte Interactiva
     while True:
@@ -586,7 +755,15 @@ def main():
                         prob = calculate_sequence_probability(sorted(nums), r['df_transition_matrix'])
                         print(f"\n✅ Resultados {ts} para {sorted(nums)} + ({sb}):")
                         print(f"   - Score JAX: {score:.4f}")
-                        print(f"   - Prob. Markov: {prob:.8f}")
+                        print(f"   - Prob. Markov Global: {prob:.8f}")
+                        prob_pos_val = 0.0
+                        if 'positional_matrices' in r:
+                            prob_pos_val = calculate_positional_markov_probability(
+                                sorted(nums), sb, r['positional_matrices'], r['last_combination'], r['last_sb'])
+                            print(f"   - Prob. Markov Posicional: {prob_pos_val:.8f}")
+                        historial_sesion.append(f"\n--- Jugada Manual {ts} ---")
+                        historial_sesion.append(f"Combinación: {sorted(nums)} + SB({sb})")
+                        historial_sesion.append(f"  Score JAX: {score:.4f} | M.Global: {prob:.8f} | M.Posicional: {prob_pos_val:.8f}")
                     except Exception as e:
                         print(f"❌ Ocurrió un error inesperado: {e}")
                 else:
@@ -601,20 +778,45 @@ def main():
                     print(f"Nota: El Score promedio de los ganadores históricos de {ts} es: {score_meta:.4f}")
                     
                     data_res = []
+                    has_pos_markov = 'positional_matrices' in r
                     for comb, sb, score in combs:
                         prob_m = calculate_sequence_probability(comb, r['df_transition_matrix'])
+                        prob_pos = calculate_positional_markov_probability(
+                            comb, sb, r['positional_matrices'], r['last_combination'], r['last_sb']) if has_pos_markov else 0.0
                         data_res.append((
                             ", ".join(map(str, comb)), 
                             sb, 
                             f"{score:.4f}", 
                             f"{prob_m:.8f}",
+                            f"{prob_pos:.8f}",
                             "⭐" if score >= score_meta else ""
                         ))
                     
-                    df_res = pd.DataFrame(data_res, columns=['Combinación', 'SB', 'Score', 'Prob. Markov', 'ADN Ganador'])
+                    df_res = pd.DataFrame(data_res, columns=['Combinación', 'SB', 'Score', 'M. Global', 'M. Posicional', 'ADN'])
                     mostrar_resultado(df_res, f"Sugerencias {ts}")
+                    historial_sesion.append(f"\n--- Generación Automática {ts} (Score meta: {score_meta:.4f}) ---")
+                    historial_sesion.append(df_res.to_string(index=False))
 
         elif opc == '3':
+            # Preguntar si guardar resultados antes de salir
+            guardar = input("\n¿Deseas guardar los resultados en un archivo TXT? (s/n): ")
+            if guardar.strip().lower() == 's':
+                try:
+                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    nombre_archivo = f"GanaBaloto_Resultados_{timestamp}.txt"
+                    with open(nombre_archivo, 'w', encoding='utf-8') as f:
+                        f.write("=" * 60 + "\n")
+                        f.write("  🎱 GanaBaloto - Reporte de Resultados\n")
+                        f.write(f"  Generado: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}\n")
+                        f.write("=" * 60 + "\n")
+                        f.write("\n".join(historial_sesion))
+                        f.write("\n\n" + "=" * 60 + "\n")
+                        f.write("  Fin del reporte\n")
+                        f.write("=" * 60 + "\n")
+                    print(f"\n✅ Resultados guardados en: {nombre_archivo}")
+                except Exception as e:
+                    print(f"\n❌ Error al guardar: {e}")
+
             print("\n¡Gracias por usar GanaBaloto! Saliendo...")
             input("Presione Enter para finalizar...")
             break
