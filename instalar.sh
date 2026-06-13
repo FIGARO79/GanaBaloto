@@ -6,6 +6,9 @@ echo "       🎱 GanaBaloto - Instalador del Entorno 🎱"
 echo "======================================================="
 echo ""
 
+# Ir al directorio del script
+cd "$(dirname "$0")"
+
 # 1. Verificar Python
 echo "[1/4] Verificando instalación de Python..."
 if command -v python3 &> /dev/null
@@ -92,7 +95,7 @@ read -p "¿Deseas intentar actualizar los resultados de Baloto ahora? (s/n): " U
 if [[ "$UPDATE" =~ ^[Ss]$ ]]; then
     echo ""
     echo "Actualizando resultados..."
-    python3 actualizar_resultados.py
+    .venv/bin/python actualizar_resultados.py
 fi
 
 echo ""

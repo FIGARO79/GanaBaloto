@@ -6,6 +6,9 @@ echo "    🎱 GanaBaloto - Actualizador de Resultados 🎱"
 echo "======================================================="
 echo ""
 
+# Ir al directorio del script
+cd "$(dirname "$0")"
+
 # Verificar si el entorno virtual existe
 if [ ! -d ".venv" ]; then
     echo "[ERROR] No se detectó el entorno virtual."
@@ -16,7 +19,7 @@ fi
 # Activar entorno e iniciar actualización
 echo "[SISTEMA] Activando entorno y buscando sorteos nuevos..."
 source .venv/bin/activate
-python3 actualizar_resultados.py
+.venv/bin/python actualizar_resultados.py
 
 echo ""
 echo "[INFO] Proceso de actualización finalizado."

@@ -5,6 +5,9 @@ export PATH="$HOME/.local/bin:$PATH"
 
 echo "Iniciando GanaBaloto con entorno optimizado..."
 
+# Ir al directorio del script
+cd "$(dirname "$0")"
+
 # Verificar si uv está instalado, si no, usar python estándar
 if command -v uv &> /dev/null
 then
@@ -25,7 +28,7 @@ else
 fi
 
 # Ejecutar el script principal
-python3 ganabaloto.py
+.venv/bin/python ganabaloto.py
 
 # Mantener la consola abierta al finalizar
 echo ""
