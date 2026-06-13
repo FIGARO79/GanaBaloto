@@ -49,14 +49,14 @@ fi
 
 # 3. Crear Entorno Virtual
 echo ""
-echo "[3/4] Creando entorno virtual (.venv)..."
-if [ -d ".venv" ]; then
+echo "[3/4] Creando entorno virtual (.venv_wsl)..."
+if [ -d ".venv_wsl" ]; then
     echo "[INFO] El entorno virtual ya existe."
 else
     if [ $USE_UV -eq 1 ]; then
-        uv venv --python 3.12 .venv
+        uv venv --python 3.12 .venv_wsl
     else
-        $PYTHON_CMD -m venv .venv
+        $PYTHON_CMD -m venv .venv_wsl
     fi
     echo "[OK] Entorno virtual creado."
 fi
@@ -64,7 +64,7 @@ fi
 # 4. Instalar Dependencias
 echo ""
 echo "[4/4] Instalando librerías..."
-source .venv/bin/activate
+source .venv_wsl/bin/activate
 
 if [ $USE_UV -eq 1 ]; then
     uv pip install -r requirements.txt
@@ -95,7 +95,7 @@ read -p "¿Deseas intentar actualizar los resultados de Baloto ahora? (s/n): " U
 if [[ "$UPDATE" =~ ^[Ss]$ ]]; then
     echo ""
     echo "Actualizando resultados..."
-    .venv/bin/python actualizar_resultados.py
+    .venv_wsl/bin/python actualizar_resultados.py
 fi
 
 echo ""

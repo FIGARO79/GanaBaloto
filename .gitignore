@@ -1,0 +1,16 @@
+# Entornos virtuales (Windows y WSL)
+.venv/
+.venv_wsl/
+
+# Caché de Python
+__pycache__/
+*.pyc
+
+# Archivos de reportes generados (evita ignorar requirements.txt)
+GanaBaloto_Resultados_*.txt
+*.log
+
+# Archivos de configuración local y entornos
+.env
+.vscode/
+.idea/
