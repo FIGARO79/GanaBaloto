@@ -7,6 +7,9 @@ echo        🎱 GanaBaloto - Instalador del Entorno 🎱
 echo =======================================================
 echo.
 
+:: Ir al directorio del script
+cd /d "%~dp0"
+
 :: 1. Verificar Python
 echo [1/4] Verificando instalacion de Python...
 python --version >nul 2>&1
@@ -93,7 +96,7 @@ set /p UPDATE="¿Deseas intentar actualizar los resultados de Baloto ahora? (s/n
 if /i "%UPDATE%"=="s" (
     echo.
     echo Actualizando resultados...
-    python actualizar_resultados.py
+    .venv\Scripts\python actualizar_resultados.py
 )
 
 echo.

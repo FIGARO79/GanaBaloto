@@ -3,6 +3,9 @@ TITLE GanaBaloto - Ejecucion Automatica
 
 echo Iniciando GanaBaloto...
 
+:: Ir al directorio del script
+cd /d "%~dp0"
+
 :: Verificar si uv está instalado
 where uv >nul 2>nul
 if %ERRORLEVEL% NEQ 0 (
@@ -51,7 +54,7 @@ if %USE_UV% EQU 1 (
 )
 
 :: Ejecutar el script
-python ganabaloto.py
+.venv\Scripts\python ganabaloto.py
 
 :: Desactivar entorno virtual
 call deactivate

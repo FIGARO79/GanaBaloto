@@ -7,6 +7,9 @@ echo     🎱 GanaBaloto - Actualizador de Resultados 🎱
 echo =======================================================
 echo.
 
+:: Ir al directorio del script
+cd /d "%~dp0"
+
 :: Verificar si el entorno virtual existe
 if not exist .venv (
     echo [ERROR] No se detecto el entorno virtual. 
@@ -18,7 +21,7 @@ if not exist .venv (
 :: Activar entorno e iniciar actualizacion
 echo [SISTEMA] Activando entorno y buscando sorteos nuevos...
 call .venv\Scripts\activate
-python actualizar_resultados.py
+.venv\Scripts\python actualizar_resultados.py
 
 echo.
 echo [INFO] Proceso de actualizacion finalizado.
