@@ -12,14 +12,23 @@ cd /d "%~dp0"
 
 :: 1. Verificar Python
 echo [1/4] Verificando instalacion de Python...
+set "PYTHON_CMD=python"
 python --version >nul 2>&1
 if %ERRORLEVEL% NEQ 0 (
-    echo [ERROR] Python no detectado. Por favor instala Python 3.10+ y agregalo al PATH.
-    echo Visita: https://www.python.org/downloads/
-    pause
-    exit /b 1
+    py --version >nul 2>&1
+    if !ERRORLEVEL! EQU 0 (
+        set "PYTHON_CMD=py"
+        echo [OK] Python detectado usando comando py.
+    ) else (
+        echo [ERROR] Python no detectado. Por favor instala Python 3.10+ y agregalo al PATH.
+        echo Visita: https://www.python.org/downloads/
+        pause
+        exit /b 1
+    )
+) else (
+    echo [OK] Python detectado.
 )
-echo [OK] Python detectado.
+
 
 :: 2. Instalar UV (Opcional pero recomendado para velocidad)
 echo.
@@ -32,7 +41,7 @@ if %ERRORLEVEL% NEQ 0 (
     
     where uv >nul 2>nul
     if %ERRORLEVEL% NEQ 0 (
-        echo [INFO] No se pudo instalar UV. Se usara PIP (mas lento).
+        echo [INFO] No se pudo instalar UV. Se usara PIP que es mas lento.
         set USE_UV=0
     ) else (
         echo [OK] UV instalado correctamente.
@@ -52,7 +61,7 @@ if exist .venv (
     if %USE_UV% EQU 1 (
         uv venv --python 3.12 .venv
     ) else (
-        python -m venv .venv
+        !PYTHON_CMD! -m venv .venv
     )
     echo [OK] Entorno virtual creado.
 )
@@ -63,20 +72,10 @@ echo [4/4] Instalando librerias (esto puede tardar un momento)...
 if %USE_UV% EQU 1 (
     call .venv\Scripts\activate
     uv pip install -r requirements.txt
-    nvidia-smi >nul 2>&1
-    if !ERRORLEVEL! EQU 0 (
-        echo [INFO] GPU NVIDIA detectada. Instalando soporte CUDA para JAX...
-        uv pip install "jax[cuda12]"
-    )
 ) else (
     call .venv\Scripts\activate
     python -m pip install --upgrade pip
     python -m pip install -r requirements.txt
-    nvidia-smi >nul 2>&1
-    if !ERRORLEVEL! EQU 0 (
-        echo [INFO] GPU NVIDIA detectada. Instalando soporte CUDA para JAX...
-        python -m pip install "jax[cuda12]"
-    )
 )
 echo [OK] Dependencias instaladas.
 

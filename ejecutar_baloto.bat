@@ -1,10 +1,26 @@
 @echo off
 TITLE GanaBaloto - Ejecucion Automatica
+SETLOCAL EnableDelayedExpansion
 
 echo Iniciando GanaBaloto...
 
 :: Ir al directorio del script
 cd /d "%~dp0"
+
+:: Verificar Python y definir variable
+set "PYTHON_CMD=python"
+python --version >nul 2>&1
+if %ERRORLEVEL% NEQ 0 (
+    py --version >nul 2>&1
+    if !ERRORLEVEL! EQU 0 (
+        set "PYTHON_CMD=py"
+    ) else (
+        echo [ERROR] Python no detectado. Por favor instala Python 3.10+ y agregalo al PATH.
+        echo Visita: https://www.python.org/downloads/
+        pause
+        exit /b 1
+    )
+)
 
 :: Verificar si uv está instalado
 where uv >nul 2>nul
@@ -20,7 +36,7 @@ if %ERRORLEVEL% NEQ 0 (
     where uv >nul 2>nul
     if %ERRORLEVEL% NEQ 0 (
         echo [SISTEMA] Instalacion de PowerShell fallo. Intentando con PIP...
-        python -m pip install --quiet uv 2>nul
+        !PYTHON_CMD! -m pip install --quiet uv 2>nul
     )
 
     :: Verificacion final
@@ -47,7 +63,7 @@ if %USE_UV% EQU 1 (
 ) else (
     echo [SISTEMA] Usando motor Python estandar.
     if not exist .venv (
-        python -m venv .venv
+        !PYTHON_CMD! -m venv .venv
     )
     call .venv\Scripts\activate
     python -m pip install --quiet -r requirements.txt
