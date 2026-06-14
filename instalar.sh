@@ -9,6 +9,13 @@ echo ""
 # Ir al directorio del script
 cd "$(dirname "$0")"
 
+# Determinar el nombre del entorno virtual a utilizar según el sistema
+if grep -qEi "(Microsoft|WSL)" /proc/version 2>/dev/null; then
+    VENV_DIR=".venv_wsl"
+else
+    VENV_DIR=".venv"
+fi
+
 # 1. Verificar Python
 echo "[1/4] Verificando instalación de Python..."
 if command -v python3 &> /dev/null
@@ -49,14 +56,14 @@ fi
 
 # 3. Crear Entorno Virtual
 echo ""
-echo "[3/4] Creando entorno virtual (.venv_wsl)..."
-if [ -d ".venv_wsl" ]; then
+echo "[3/4] Creando entorno virtual ($VENV_DIR)..."
+if [ -d "$VENV_DIR" ]; then
     echo "[INFO] El entorno virtual ya existe."
 else
     if [ $USE_UV -eq 1 ]; then
-        uv venv --python 3.12 .venv_wsl
+        uv venv --python 3.12 "$VENV_DIR"
     else
-        $PYTHON_CMD -m venv .venv_wsl
+        $PYTHON_CMD -m venv "$VENV_DIR"
     fi
     echo "[OK] Entorno virtual creado."
 fi
@@ -64,7 +71,7 @@ fi
 # 4. Instalar Dependencias
 echo ""
 echo "[4/4] Instalando librerías..."
-source .venv_wsl/bin/activate
+source "$VENV_DIR/bin/activate"
 
 if [ $USE_UV -eq 1 ]; then
     uv pip install -r requirements.txt
@@ -95,7 +102,7 @@ read -p "¿Deseas intentar actualizar los resultados de Baloto ahora? (s/n): " U
 if [[ "$UPDATE" =~ ^[Ss]$ ]]; then
     echo ""
     echo "Actualizando resultados..."
-    .venv_wsl/bin/python actualizar_resultados.py
+    "$VENV_DIR/bin/python" actualizar_resultados.py
 fi
 
 echo ""

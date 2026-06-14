@@ -10,6 +10,9 @@ __pycache__/
 GanaBaloto_Resultados_*.txt
 *.log
 
+# Archivos de datos (evita ignorar requirements.txt)
+/data/baloto.xlsx
+
 # Archivos de configuración local y entornos
 .env
 .vscode/
