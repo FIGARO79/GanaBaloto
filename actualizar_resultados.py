@@ -182,12 +182,19 @@ def presentar_resumen(lista_resultados):
     return True
 
 if __name__ == "__main__":
+    import sys
+    es_auto = os.getenv("AUTO_UPDATE") == "true" or "--auto" in sys.argv
     print("Buscando resultados...")
     res = obtener_todos_los_resultados()
     if res:
         if presentar_resumen(res):
-            confirmar = input("\n¿Deseas guardar los nuevos resultados en baloto.json? (s/n): ")
-            if confirmar.lower() == 's':
+            if es_auto:
+                print("\n[AUTO] Guardando automáticamente los nuevos resultados en baloto.json...")
                 actualizar_json(res)
             else:
-                print("Operación cancelada.")
+                confirmar = input("\n¿Deseas guardar los nuevos resultados en baloto.json? (s/n): ")
+                if confirmar.lower() == 's':
+                    actualizar_json(res)
+                else:
+                    print("Operación cancelada.")
+

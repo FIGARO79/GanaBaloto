@@ -163,7 +163,7 @@ def obtener_predicciones_markov_posicional(r):
 FILE_PATH = 'baloto.json'
 
 @st.cache_data
-def cargar_y_analizar_datos():
+def cargar_y_analizar_datos(file_mtime):
     """Lee el archivo JSON de Baloto y ejecuta el análisis matemático."""
     if not os.path.exists(FILE_PATH):
         return None
@@ -181,9 +181,12 @@ def cargar_y_analizar_datos():
         st.error(f"Error al analizar el archivo de datos: {e}")
         return None
 
+# Obtener fecha de última modificación del archivo para invalidar la caché automáticamente si cambia
+mtime = os.path.getmtime(FILE_PATH) if os.path.exists(FILE_PATH) else 0
+
 # --- Ejecución de Carga Inicial ---
 with st.spinner("Analizando historial y matrices de Markov con JAX..."):
-    resultados_globales = cargar_y_analizar_datos()
+    resultados_globales = cargar_y_analizar_datos(mtime)
 
 # Detectar dispositivo de JAX para reporte en barra lateral
 try:
@@ -219,6 +222,13 @@ st.sidebar.markdown(f"""
     <span style="font-weight: 800; color: #16a34a !important; font-size: 14px;">⚡ JAX ({dispositivo_jax})</span>
 </div>
 """, unsafe_allow_html=True)
+
+# Botón interactivo para recarga manual de datos
+st.sidebar.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
+if st.sidebar.button("🔄 Recargar Base de Datos", use_container_width=True):
+    st.cache_data.clear()
+    st.rerun()
+
 
 # --- Contenido Principal ---
 st.markdown("""
