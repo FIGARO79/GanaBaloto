@@ -49,7 +49,7 @@ except ImportError:
     IN_NOTEBOOK = False
 
 # --- Configuración Global ---
-FILE_PATH = 'baloto.xlsx'
+FILE_PATH = 'baloto.json'
 COLUMNS_TO_ANALYZE = ['B1', 'B2', 'B3', 'B4', 'B5']
 SUPER_BALOTA_COLUMN = 'SB'
 PRIZE_COLUMN = 'Premios 5+1'
@@ -587,10 +587,12 @@ def analizar_ganadores_historicos(results):
 
 def main():
     try:
-        xls = pd.ExcelFile(FILE_PATH)
-        sheets = [s for s in ['Baloto', 'Revancha'] if s in xls.sheet_names]
+        import json
+        with open(FILE_PATH, 'r', encoding='utf-8') as f:
+            data_json = json.load(f)
+        sheets = [s for s in ['Baloto', 'Revancha'] if s in data_json]
     except Exception as e:
-        print(f"Error al cargar Excel: {e}")
+        print(f"Error al cargar JSON: {e}")
         return
 
     resultados = {}
@@ -598,7 +600,7 @@ def main():
 
     for s in sheets:
         print(f"\nProcesando hoja: {s}...")
-        df = pd.read_excel(FILE_PATH, sheet_name=s)
+        df = pd.DataFrame(data_json[s])
         resultados[s] = analizar_sorteo(s, df)
 
     # Visualización

@@ -14,7 +14,7 @@ El proyecto está construido sobre las siguientes tecnologías y librerías de P
 | **JAX & jaxlib** | Computación de Alto Rendimiento | Aceleración matemática en paralelo con soporte para CPU y GPU CUDA 12. |
 | **Pandas** | Análisis de Datos | Manipulación, filtrado y modelado de las series históricas de sorteos. |
 | **SciPy** | Computación Científica | Pruebas estadísticas avanzadas (Chi-cuadrado, Runs Test, etc.). |
-| **OpenPyXL** | Almacenamiento de Datos | Lectura y actualización de la base de datos histórica en formato Excel (`baloto.xlsx`). |
+| **JSON** | Almacenamiento de Datos | Lectura y actualización de la base de datos histórica ligera (`baloto.json`). |
 | **BeautifulSoup4 & Requests** | Extracción de Datos | Web scraping automatizado para obtener los últimos sorteos oficiales de la web de Baloto. |
 | **Tabulate** | Interfaz de Usuario | Formateo e impresión de tablas legibles en la interfaz de línea de comandos. |
 | **UV (Astral)** | Gestor de Paquetes | Motor de entorno ultrarrápido escrito en Rust para la instalación óptima de dependencias. |
@@ -68,7 +68,7 @@ El instalador crea un entorno virtual (`.venv`), instala el gestor de paquetes *
 Una vez completado el paso de instalación, dispone de dos utilidades principales para su uso diario:
 
 ### 1️⃣ Actualizar Base de Datos (Web Scraping)
-Descarga en tiempo real los últimos sorteos oficiales de la plataforma de Baloto y los añade al archivo histórico `baloto.xlsx`.
+Descarga en tiempo real los últimos sorteos oficiales de la plataforma de Baloto y los añade al archivo histórico `baloto.json`.
 
 * **Linux / macOS:**
   ```bash
@@ -94,7 +94,7 @@ Inicia el motor predictivo interactivo en consola, el cual cargará la base de d
 ```
 GanaBaloto/
 ├── .venv/                     # Entorno virtual con las librerías aisladas
-├── baloto.xlsx                # Base de datos histórica (Hojas: "Baloto" y "Revancha")
+├── baloto.json                # Base de datos histórica (Estructura: "Baloto" y "Revancha")
 ├── ganabaloto.py              # Script principal del motor predictivo y generación
 ├── actualizar_resultados.py   # Script de web scraping para extracción de sorteos
 ├── GUIA_ANALISIS.md           # Guía de usuario para la interpretación de estadísticas

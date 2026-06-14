@@ -4,9 +4,8 @@ import pandas as pd
 from datetime import datetime
 import os
 import re
-import json
 
-FILE_PATH = 'baloto.json'
+FILE_PATH = 'baloto.xlsx'
 
 def extraer_premios(soup):
     premios = {
@@ -106,61 +105,57 @@ def obtener_todos_los_resultados():
         print(f"Error al conectar con la fuente: {e}")
         return None
 
-def actualizar_json(lista_resultados):
+def actualizar_excel(lista_resultados):
     if not os.path.exists(FILE_PATH):
         print(f"Error: No se encontró el archivo {FILE_PATH}")
         return
 
     try:
-        with open(FILE_PATH, 'r', encoding='utf-8') as f:
-            dict_hojas = json.load(f)
+        dict_hojas = {
+            "Baloto": pd.read_excel(FILE_PATH, sheet_name="Baloto"),
+            "Revancha": pd.read_excel(FILE_PATH, sheet_name="Revancha")
+        }
         
         cambios = False
-        for tipo in ["Baloto", "Revancha"]:
-            df = pd.DataFrame(dict_hojas[tipo])
-            # En el JSON la fecha se guarda en formato YYYY-MM-DD
-            df['Fecha'] = pd.to_datetime(df['Fecha'], errors='coerce')
-            
-            fechas_existentes = df['Fecha'].dt.date.dropna().tolist()
-            
-            nuevas_filas = []
-            for item in reversed(lista_resultados):
-                fecha_dt = pd.to_datetime(item["Fecha"], dayfirst=True)
+        with pd.ExcelWriter(FILE_PATH, engine='openpyxl', mode='a', if_sheet_exists='overlay', date_format='DD/MM/YYYY', datetime_format='DD/MM/YYYY') as writer:
+            for tipo in ["Baloto", "Revancha"]:
+                df = dict_hojas[tipo]
+                # Asegurar que Fecha sea datetime sin hora para la comparación
+                df['Fecha'] = pd.to_datetime(df['Fecha'], dayfirst=True)
                 
-                if fecha_dt.date() not in fechas_existentes:
-                    nums = item[tipo]["numeros"]
-                    nueva_fila = {
-                        "Fecha": fecha_dt.strftime('%Y-%m-%d'),
-                        "B1": int(nums[0]), "B2": int(nums[1]), "B3": int(nums[2]),
-                        "B4": int(nums[3]), "B5": int(nums[4]), "SB": int(nums[5]),
-                        "Premios 5+1": int(item[tipo]["p51"]),
-                        "Premios 5+0": int(item[tipo]["p50"])
-                    }
-                    nuevas_filas.append(nueva_fila)
-                    print(f"[+] Añadiendo {tipo} del {item['Fecha']}")
-            
-            if nuevas_filas:
-                df_nuevas = pd.DataFrame(nuevas_filas)
-                df_nuevas['Fecha'] = pd.to_datetime(df_nuevas['Fecha'])
-                df_final = pd.concat([df, df_nuevas], ignore_index=True)
-                df_final = df_final.sort_values(by='Fecha').reset_index(drop=True)
+                fechas_existentes = df['Fecha'].dt.date.tolist()
                 
-                df_final['Fecha'] = df_final['Fecha'].dt.strftime('%Y-%m-%d')
-                for col in ['B1', 'B2', 'B3', 'B4', 'B5', 'SB', 'Premios 5+1', 'Premios 5+0']:
-                    df_final[col] = df_final[col].astype(int)
+                nuevas_filas = []
+                for item in reversed(lista_resultados):
+                    fecha_dt = pd.to_datetime(item["Fecha"], dayfirst=True)
                     
-                dict_hojas[tipo] = df_final.to_dict(orient='records')
-                cambios = True
+                    if fecha_dt.date() not in fechas_existentes:
+                        nums = item[tipo]["numeros"]
+                        nueva_fila = {
+                            "Fecha": fecha_dt.date(),  # Guardar solo la fecha
+                            "B1": int(nums[0]), "B2": int(nums[1]), "B3": int(nums[2]),
+                            "B4": int(nums[3]), "B5": int(nums[4]), "SB": int(nums[5]),
+                            "Premios 5+1": item[tipo]["p51"],
+                            "Premios 5+0": item[tipo]["p50"]
+                        }
+                        nuevas_filas.append(nueva_fila)
+                        print(f"[+] Añadiendo {tipo} del {item['Fecha']}")
+                
+                if nuevas_filas:
+                    df_final = pd.concat([df, pd.DataFrame(nuevas_filas)], ignore_index=True)
+                    # Convertir toda la columna a date antes de guardar para consistencia
+                    df_final['Fecha'] = pd.to_datetime(df_final['Fecha']).dt.date
+                    df_final = df_final.sort_values(by='Fecha').reset_index(drop=True)
+                    df_final.to_excel(writer, sheet_name=tipo, index=False)
+                    cambios = True
         
         if not cambios:
             print("[!] No se encontraron sorteos nuevos.")
         else:
-            with open(FILE_PATH, 'w', encoding='utf-8') as f:
-                json.dump(dict_hojas, f, ensure_ascii=False, indent=4)
-            print("[OK] JSON actualizado.")
+            print("[OK] Excel actualizado.")
 
     except Exception as e:
-        print(f"Error al actualizar el archivo JSON: {e}")
+        print(f"Error al actualizar el Excel: {e}")
 
 def presentar_resumen(lista_resultados):
     if not lista_resultados:
@@ -186,8 +181,8 @@ if __name__ == "__main__":
     res = obtener_todos_los_resultados()
     if res:
         if presentar_resumen(res):
-            confirmar = input("\n¿Deseas guardar los nuevos resultados en baloto.json? (s/n): ")
+            confirmar = input("\n¿Deseas guardar los nuevos resultados en baloto.xlsx? (s/n): ")
             if confirmar.lower() == 's':
-                actualizar_json(res)
+                actualizar_excel(res)
             else:
                 print("Operación cancelada.")

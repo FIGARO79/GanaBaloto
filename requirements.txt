@@ -1,9 +1,9 @@
 pandas
 jax
 jaxlib
-openpyxl
 scipy
 ipython
 requests
 beautifulsoup4
 tabulate
+streamlit
