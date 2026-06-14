@@ -9,6 +9,7 @@ __pycache__/
 # Archivos de reportes generados (evita ignorar requirements.txt)
 GanaBaloto_Resultados_*.txt
 *.log
+*.zip
 
 # Archivos de datos (evita ignorar requirements.txt)
 /data/baloto.xlsx

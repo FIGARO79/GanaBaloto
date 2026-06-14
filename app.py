@@ -3,7 +3,12 @@ import os
 import json
 import numpy as np
 import pandas as pd
-import jax
+try:
+    import jax
+except ImportError:
+    import types
+    jax = types.ModuleType("jax")
+    jax.numpy = np
 from flask import Flask, jsonify, request, send_from_directory
 
 # Evitar preasignación de JAX

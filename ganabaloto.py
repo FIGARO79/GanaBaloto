@@ -19,8 +19,21 @@ os.environ["JAX_PLATFORMS"] = ""  # Permite que JAX elija la mejor disponible si
 import pandas as pd
 import random
 from itertools import combinations
-import jax
-import jax.numpy as jnp
+try:
+    import jax
+    import jax.numpy as jnp
+    HAS_JAX = True
+except ImportError:
+    import numpy as jnp
+    # Crear un mock de jax.jit que actúe como pasarela
+    class MockJax:
+        def jit(self, fn):
+            return fn
+        def devices(self):
+            raise Exception("No JAX")
+    jax = MockJax()
+    HAS_JAX = False
+
 import math
 from collections import defaultdict
 from scipy import stats
@@ -29,12 +42,15 @@ import html
 from datetime import datetime
 
 # Reportar dispositivo en uso
-try:
-    dispositivos = jax.devices()
-    tipo_dispositivo = dispositivos[0].device_kind.upper()
-    print(f"\n[SISTEMA] Motor de cálculo: JAX ({tipo_dispositivo} detectada)")
-except:
-    print("\n[SISTEMA] Motor de cálculo: JAX (CPU detectada)")
+if HAS_JAX:
+    try:
+        dispositivos = jax.devices()
+        tipo_dispositivo = dispositivos[0].device_kind.upper()
+        print(f"\n[SISTEMA] Motor de cálculo: JAX ({tipo_dispositivo} detectada)")
+    except:
+        print("\n[SISTEMA] Motor de cálculo: JAX (CPU detectada)")
+else:
+    print("\n[SISTEMA] Motor de cálculo: NumPy (Respaldo sin JAX activo)")
 print("-" * 50)
 
 try:

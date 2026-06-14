@@ -1,11 +1,7 @@
 pandas
-jax
-jaxlib
 scipy
-ipython
 requests
 beautifulsoup4
 tabulate
-streamlit
 openpyxl
 flask
