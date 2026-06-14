@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 import os
 import jax
 import ganabaloto as gb
@@ -235,9 +236,17 @@ if not resultados_globales or tipo_sorteo not in resultados_globales:
 else:
     r = resultados_globales[tipo_sorteo]
     
-    # Calcular Score de referencia (Promedio de ganadores históricos 5+1)
+    # Calcular Score de referencia (Promedio, Mediana y Percentil 75 de ganadores históricos 5+1)
     df_ganadores_ref = gb.analizar_ganadores_historicos(r)
-    score_meta = df_ganadores_ref['Score JAX'].mean() if not df_ganadores_ref.empty else 0.1450
+    if not df_ganadores_ref.empty:
+        scores_ganadores = df_ganadores_ref['Score JAX'].astype(float).values
+        score_meta = float(scores_ganadores.mean())
+        score_mediana = float(np.median(scores_ganadores))
+        score_p75 = float(np.percentile(scores_ganadores, 75))
+    else:
+        score_meta = 0.1450
+        score_mediana = 0.1450
+        score_p75 = 0.1550
     
     # Crear Pestañas principales (Premium layout)
     tab1, tab2, tab3, tab4 = st.tabs([
@@ -265,7 +274,7 @@ else:
 
         col_ref_1, col_ref_2 = st.columns(2)
         with col_ref_1:
-            st.info(f"🎯 **Score Meta Recomendado (Promedio histórico de ganadores):** `{score_meta:.4f}`")
+            st.info(f"🎯 **Umbrales Score JAX:** Mediana: `{score_mediana:.4f}` | P75: `{score_p75:.4f}` (Promedio: `{score_meta:.4f}`)")
         with col_ref_2:
             st.success(f"📅 **Último sorteo analizado:** `{' - '.join(map(str, r['last_combination']))} + SB({r['last_sb']})`")
 
@@ -288,13 +297,19 @@ else:
                         comb, sb, r['positional_matrices'], r['last_combination'], r['last_sb']
                     ) if has_pos_markov else 0.0
 
-                    es_estrella = score >= score_meta
+                    es_estrella = score >= score_p75
+                    es_bueno = score >= score_mediana and score < score_p75
                     
                     # Estructura de tarjeta para la combinación usando contenedores con borde
                     with st.container(border=True):
                         col_card_1, col_card_2, col_card_3 = st.columns([3, 2, 2])
                         with col_card_1:
-                            st.markdown(f"**Sugerencia #{i+1}**" + (" 🌟 (Recomendación ADN)" if es_estrella else ""))
+                            prefix_text = ""
+                            if es_estrella:
+                                prefix_text = " 🌟 (ADN Premium)"
+                            elif es_bueno:
+                                prefix_text = " 👍 (Frecuencia Media)"
+                            st.markdown(f"**Sugerencia #{i+1}**" + prefix_text)
                             render_balotas_html(comb, sb)
                         with col_card_2:
                             st.write(f"📊 **Score JAX:** `{score:.4f}`")
@@ -302,7 +317,9 @@ else:
                         with col_card_3:
                             st.write(f"🧩 **Markov Posicional:** `{prob_pos:.8f}`")
                             if es_estrella:
-                                st.markdown("<span style='color: #16a34a !important; font-weight: bold;'>⭐ ADN Ganador</span>", unsafe_allow_html=True)
+                                st.markdown("<span style='color: #16a34a !important; font-weight: bold;'>⭐ ADN Ganador Premium</span>", unsafe_allow_html=True)
+                            elif es_bueno:
+                                st.markdown("<span style='color: #3b82f6 !important; font-weight: bold;'>✔ Frecuente</span>", unsafe_allow_html=True)
                             else:
                                 st.markdown("<span style='color: #64748b !important; font-weight: bold;'>Estándar</span>", unsafe_allow_html=True)
 
@@ -316,7 +333,7 @@ else:
         with st.expander("ℹ️ Guía rápida de análisis"):
             st.markdown(f"""
             Ingresa tu combinación favorita. El analizador calculará tres métricas clave:
-            1. **Score JAX:** Compáralo con el **Score Meta** (promedio de los ganadores históricos: `{score_meta:.4f}`). Si es mayor, tu jugada tiene alta frecuencia histórica.
+            1. **Score JAX:** Compáralo con los umbrales históricos (Mediana: `{score_mediana:.4f}`, P75: `{score_p75:.4f}`). Si supera el P75, es de frecuencia premium.
             2. **Markov Global:** Una probabilidad mayor a `0` indica que las transiciones de números son factibles.
             3. **Markov Posicional:** Si es mayor a `0`, significa que la transición desde el último sorteo real es común y está respaldada por el histórico.
             """)
@@ -366,11 +383,18 @@ else:
                     st.metric(
                         label="Score JAX (Frecuencia)",
                         value=f"{score:.4f}",
-                        delta=f"{(score - score_meta):.4f} vs Promedio",
-                        help="El Score JAX mide la frecuencia ponderada de los números elegidos en base a la matriz de sorteos históricos usando aceleración por hardware."
+                        delta=f"{(score - score_mediana):.4f} vs Mediana",
+                        help="El Score JAX mide la frecuencia ponderada de los números elegidos en base a la matriz de sorteos históricos."
                     )
+                    if score >= score_p75:
+                        status_text = "Excelente (ADN Ganador Premium). Tus números tienen una frecuencia acumulada excepcionalmente alta."
+                    elif score >= score_mediana:
+                        status_text = "Frecuente. Tus números están en el rango promedio del histórico de combinaciones ganadoras."
+                    else:
+                        status_text = "Bajo el promedio. Juegas con combinaciones de balotas menos comunes en el histórico."
+                    
                     st.markdown(f"""
-                    * **Interpretación:** {"Excelente. Tus números son muy ganadores en el histórico." if score >= score_meta else "Bajo el promedio. Juegas con números menos comunes."}
+                    * **Interpretación:** {status_text}
                     """)
                 with col_m_2:
                     st.metric(

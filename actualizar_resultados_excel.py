@@ -181,8 +181,5 @@ if __name__ == "__main__":
     res = obtener_todos_los_resultados()
     if res:
         if presentar_resumen(res):
-            confirmar = input("\n¿Deseas guardar los nuevos resultados en baloto.xlsx? (s/n): ")
-            if confirmar.lower() == 's':
-                actualizar_excel(res)
-            else:
-                print("Operación cancelada.")
+            print("\nActualizando automáticamente baloto.xlsx con los nuevos resultados...")
+            actualizar_excel(res)
