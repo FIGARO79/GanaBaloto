@@ -3,21 +3,29 @@ import os
 import json
 import numpy as np
 import pandas as pd
+
 try:
     import jax
 except ImportError:
     import types
     jax = types.ModuleType("jax")
     jax.numpy = np
+
 from flask import Flask, jsonify, request, send_from_directory
-
-# Evitar preasignación de JAX
-os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
-
 import ganabaloto as gb
 
-app = Flask(__name__, static_folder='frontend/dist', static_url_path='')
+# Configuración de la aplicación
+app_config = {
+    "static_folder": 'frontend/dist',
+    "static_url_path": ''
+}
 
+app = Flask(__name__, **app_config)
+run_config = {
+    "host": '0.0.0.0',
+    "port": 5000,
+    "debug": True
+}
 FILE_PATH = 'baloto.json'
 resultados_cache = {}
 mtime_cache = 0
@@ -38,13 +46,13 @@ def load_and_analyze():
                 mtime_cache = mtime
                 print("[SISTEMA] Base de datos analizada e indexada en memoria.")
             except Exception as e:
-                print(f"[ERROR] Al cargar/analizar baloto.json: {e}")
+                app.logger.error(f"Error al cargar/analizar baloto.json: {e}")
 
 # Asegurar carga inicial
 try:
     load_and_analyze()
 except Exception as e:
-    print(f"[ERROR] Error en carga inicial: {e}")
+    app.logger.error(f"Error en carga inicial: {e}")
 
 @app.route('/')
 def serve():
@@ -70,7 +78,7 @@ def get_sorteo(tipo):
                 r['total_draws_jax_val']
             ))
         except Exception as e:
-            print(f"[ERROR] Al calcular last_score: {e}")
+            app.logger.error(f"Error al calcular last_score: {e}")
             
     last_markov = float(gb.calculate_sequence_probability(r['last_combination'], r['df_transition_matrix']))
 
@@ -235,9 +243,9 @@ def analizar():
     
     prob_pos = 0.0
     if 'positional_matrices' in r:
-        prob_pos = float(gb.calculate_positional_markov_probability(
+        prob_pos = gb.calculate_positional_markov_probability(
             jugada_ordenada, sb, r['positional_matrices'], r['last_combination'], r['last_sb']
-        ))
+        )
         
     return jsonify({
         "combinacion": jugada_ordenada,
@@ -253,14 +261,10 @@ def recargar():
     resultados_cache = {}
     try:
         load_and_analyze()
-        return jsonify({"status": "ok", "message": "Base de datos recargada con éxito."})
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
-
-# Ruta catch-all para servir index.html ante cualquier ruta desconocida (para soporte de React Router si se requiere)
-@app.route('/<path:path>')
-def catch_all(path):
-    return send_from_directory(app.static_folder, 'index.html')
+        return jsonify({'error': str(e)}), 500
+    return jsonify({'status': 'success'})
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    print("[SISTEMA] Iniciando servidor Flask en http://localhost:5000...")
+    app.run(**run_config)

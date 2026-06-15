@@ -3,6 +3,7 @@ import Sugerencias from './components/Sugerencias.jsx';
 import AnalizadorManual from './components/AnalizadorManual.jsx';
 import MetricasHistorial from './components/MetricasHistorial.jsx';
 import Metodologia from './components/Metodologia.jsx';
+import AdBanner from './components/AdBanner.jsx';
 import './App.css';
 
 function App() {
@@ -101,6 +102,9 @@ function App() {
           >
             {reloadingDb ? 'Recargando...' : '🔄 Recargar Base de Datos'}
           </button>
+
+          {/* Bloque de Anuncio Vertical en Barra Lateral */}
+          <AdBanner slot="1234567890" format="vertical" />
         </div>
       </aside>
 
@@ -192,6 +196,9 @@ function App() {
                 </div>
               </div>
             </div>
+
+            {/* Anuncio Horizontal de Contenido */}
+            <AdBanner slot="0987654321" format="horizontal" />
 
             {/* Contenido de la pestaña */}
             {activeTab === 'sugerencias' && (
