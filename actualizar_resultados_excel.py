@@ -49,7 +49,7 @@ def obtener_todos_los_resultados():
         headings = soup.find_all(class_='panel-heading')
         
         for heading in headings:
-            if 'Resultado Baloto' not in heading.text: continue
+            if 'Baloto' not in heading.text or not heading.find('time'): continue
             
             # Extraer Fecha
             time_tag = heading.find('time')
