@@ -54,6 +54,10 @@ try:
 except Exception as e:
     app.logger.error(f"Error en carga inicial: {e}")
 
+@app.route('/ads.txt')
+def ads_txt():
+    return send_from_directory(app.static_folder, 'ads.txt')
+
 @app.route('/')
 def serve():
     return send_from_directory(app.static_folder, 'index.html')
