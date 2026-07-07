@@ -9,14 +9,21 @@ echo ""
 # Ir al directorio del script
 cd "$(dirname "$0")"
 
-# Determinar el entorno virtual a utilizar
-if [ -d ".venv_wsl" ]; then
-    VENV_DIR=".venv_wsl"
-elif [ -d ".venv" ]; then
-    VENV_DIR=".venv"
+# Determinar el entorno virtual a utilizar según el sistema y su validez
+if grep -qEi "(Microsoft|WSL)" /proc/version 2>/dev/null; then
+    # En WSL, preferir .venv_wsl si es válido, luego .venv si es válido
+    if [ -f ".venv_wsl/bin/activate" ]; then
+        VENV_DIR=".venv_wsl"
+    elif [ -f ".venv/bin/activate" ]; then
+        VENV_DIR=".venv"
+    else
+        VENV_DIR=".venv_wsl"
+    fi
 else
-    # Si ninguno existe, predecir el nombre esperado según el sistema
-    if grep -qEi "(Microsoft|WSL)" /proc/version 2>/dev/null; then
+    # En Linux estándar, preferir .venv si es válido, luego .venv_wsl si es válido
+    if [ -f ".venv/bin/activate" ]; then
+        VENV_DIR=".venv"
+    elif [ -f ".venv_wsl/bin/activate" ]; then
         VENV_DIR=".venv_wsl"
     else
         VENV_DIR=".venv"

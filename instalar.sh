@@ -57,9 +57,13 @@ fi
 # 3. Crear Entorno Virtual
 echo ""
 echo "[3/4] Creando entorno virtual ($VENV_DIR)..."
-if [ -d "$VENV_DIR" ]; then
-    echo "[INFO] El entorno virtual ya existe."
+if [ -d "$VENV_DIR" ] && [ -f "$VENV_DIR/bin/activate" ]; then
+    echo "[INFO] El entorno virtual ya existe y es válido."
 else
+    if [ -d "$VENV_DIR" ]; then
+        echo "[WARNING] El directorio $VENV_DIR existe pero no es un entorno virtual válido para Linux/WSL. Recreándolo..."
+        rm -rf "$VENV_DIR"
+    fi
     if [ $USE_UV -eq 1 ]; then
         uv venv --python 3.12 "$VENV_DIR"
     else
