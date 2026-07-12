@@ -1,6 +1,16 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
-export default function Sugerencias({ sorteo, scoreMediana, scoreP75, scoreMeta }) {
+const formatProb = (val) => {
+  if (val === undefined || val === null) return '0.000000';
+  const num = Number(val);
+  if (num === 0) return '0.000000';
+  if (num < 1e-5) {
+    return num.toExponential(3);
+  }
+  return num.toFixed(6);
+};
+
+export default function Sugerencias({ sorteo, scoreMediana, scoreP75 }) {
   const [cantidad, setCantidad] = useState(10);
   const [combinaciones, setCombinaciones] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -127,11 +137,11 @@ export default function Sugerencias({ sorteo, scoreMediana, scoreP75, scoreMeta 
                     </div>
                     <div>
                       <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 'bold' }}>Markov Global</div>
-                      <div style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)' }}>{item.prob_m.toFixed(6)}</div>
+                      <div style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)' }}>{formatProb(item.prob_m)}</div>
                     </div>
                     <div style={{ gridColumn: 'span 2' }}>
                       <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 'bold' }}>Markov Posicional</div>
-                      <div style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)' }}>{item.prob_pos.toFixed(6)}</div>
+                      <div style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)' }}>{formatProb(item.prob_pos)}</div>
                     </div>
                   </div>
                 </div>

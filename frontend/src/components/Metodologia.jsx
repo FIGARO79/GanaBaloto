@@ -1,5 +1,3 @@
-import React from 'react';
-
 export default function Metodologia() {
   return (
     <div>
@@ -8,6 +6,23 @@ export default function Metodologia() {
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', margin: '0' }}>
           Esta aplicación utiliza modelos estocásticos, cadenas de Markov y análisis de frecuencias acelerado mediante JAX para analizar y optimizar jugadas de lotería.
         </p>
+      </div>
+
+      <div className="card" style={{ background: 'rgba(16, 185, 129, 0.04)', borderColor: 'rgba(16, 185, 129, 0.18)' }}>
+        <h4 className="card-title" style={{ marginBottom: '10px' }}>🧠 Qué puedes aprender aquí</h4>
+        <p style={{ color: 'var(--text-secondary)', lineHeight: 1.7, margin: 0 }}>
+          Esta web no pretende ofrecer certezas sobre la lotería, sino mostrar un marco más claro para interpretar los datos históricos, comparar combinaciones y entender cómo se construye el análisis estadístico.
+        </p>
+      </div>
+
+      <div className="card" style={{ background: 'rgba(37, 99, 235, 0.04)', borderColor: 'rgba(37, 99, 235, 0.16)' }}>
+        <h4 className="card-title" style={{ marginBottom: '10px' }}>🔗 ¿Qué son las cadenas de Markov?</h4>
+        <p style={{ color: 'var(--text-secondary)', lineHeight: 1.7, margin: 0 }}>
+          Una cadena de Markov es un modelo matemático que permite estudiar cómo cambia un sistema paso a paso, donde el siguiente estado depende solo del estado actual, no de todo el pasado. En este contexto, se usa para analizar la probabilidad de que ciertos números aparezcan en relación con los resultados anteriores.
+        </p>
+      </div>
+
+      <div className="grid-2">
       </div>
 
       <div className="grid-2">

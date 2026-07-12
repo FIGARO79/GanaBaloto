@@ -23,6 +23,7 @@
   --font-title: 'Outfit', sans-serif;
   
   font-family: var(--font-sans);
+  font-size: 14.5px;
   background-color: var(--bg-primary);
   color: var(--text-primary);
   margin: 0;
@@ -330,6 +331,94 @@ body {
   margin-bottom: 0;
 }
 
+.content-intro {
+  margin-bottom: 24px;
+}
+
+.section-badge {
+  display: inline-block;
+  margin-bottom: 8px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.08);
+  color: var(--accent-blue);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.content-intro-text {
+  color: var(--text-secondary);
+  line-height: 1.6;
+  max-width: 760px;
+  margin-bottom: 16px;
+}
+
+.content-intro-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.info-card {
+  padding: 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.info-card h3 {
+  margin: 0 0 8px 0;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.info-card p {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.content-support-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.info-list {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+.faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.faq-list details {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #f8fafc;
+}
+
+.faq-list summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.faq-list p {
+  margin: 8px 0 0 0;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
 /* Tabs */
 .tabs-navigation {
   display: flex;
@@ -427,7 +516,7 @@ body {
   border-radius: 50%;
   background: #ffffff;
   font-weight: 900;
-  font-size: 15px;
+  font-size: 0.95rem;
   font-family: var(--font-sans);
   box-shadow: inset 1px 1px 3px rgba(0,0,0,0.15);
 }
@@ -441,7 +530,7 @@ body {
 }
 
 .balota-separator {
-  font-size: 28px;
+  font-size: 1.7rem;
   font-weight: 700;
   color: rgba(0, 0, 0, 0.2);
   margin: 0 4px;

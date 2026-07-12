@@ -1,4 +1,12 @@
-import React from 'react';
+const formatProb = (val) => {
+  if (val === undefined || val === null) return '0.000000';
+  const num = Number(val);
+  if (num === 0) return '0.000000';
+  if (num < 1e-5) {
+    return num.toExponential(3);
+  }
+  return num.toFixed(6);
+};
 
 export default function MetricasHistorial({ sorteo, data }) {
   if (!data) return <p>Cargando métricas...</p>;
@@ -39,7 +47,7 @@ export default function MetricasHistorial({ sorteo, data }) {
                     <td>{row.SB}</td>
                     <td style={{ color: 'var(--accent-green)', fontWeight: '600' }}>${row['Valor Premio']}</td>
                     <td><code>{row['Score JAX'].toFixed(6)}</code></td>
-                    <td><code>{row['Prob. Markov'].toFixed(6)}</code></td>
+                    <td><code>{formatProb(row['Prob. Markov'])}</code></td>
                   </tr>
                 ))
               ) : (

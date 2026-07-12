@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 
 /**
  * Componente reutilizable para bloques de anuncios (Google AdSense u otro servicio).
@@ -52,10 +52,11 @@ const AdBanner = ({ slot, format = 'auto', responsive = true }) => {
       <ins 
         className="adsbygoogle"
         style={{ display: 'block', width: '100%' }}
-        data-ad-client="ca-pub-4632851046040252" // Reemplazar con tu ID de publicador
-        data-ad-slot={slot || "0000000000"}       // Reemplazar con tu ID de bloque
+        data-ad-client="ca-pub-4632851046040252"
+        data-ad-slot={slot || "0000000000"}
         data-ad-format={format}
         data-full-width-responsive={responsive ? "true" : "false"}
+        aria-label="Publicidad"
       ></ins>
     </div>
   );

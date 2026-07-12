@@ -1,4 +1,14 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+
+const formatProb = (val) => {
+  if (val === undefined || val === null) return '0.000000';
+  const num = Number(val);
+  if (num === 0) return '0.000000';
+  if (num < 1e-5) {
+    return num.toExponential(3);
+  }
+  return num.toFixed(6);
+};
 
 export default function AnalizadorManual({ sorteo, scoreMediana, scoreP75, posTopData }) {
   const [numeros, setNumeros] = useState(['', '', '', '', '']);
@@ -182,9 +192,9 @@ export default function AnalizadorManual({ sorteo, scoreMediana, scoreP75, posTo
               </p>
             </div>
 
-            <div className="card" style={{ margin: 0, background: 'rgba(255, 255, 255, 0.01)' }}>
+             <div className="card" style={{ margin: 0, background: 'rgba(255, 255, 255, 0.01)' }}>
               <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 'bold' }}>Probabilidad Markov Global</div>
-              <div style={{ fontSize: '1.6rem', fontWeight: '800', margin: '8px 0', color: 'var(--text-primary)' }}>{analisis.prob_m.toFixed(6)}</div>
+              <div style={{ fontSize: '1.6rem', fontWeight: '800', margin: '8px 0', color: 'var(--text-primary)' }}>{formatProb(analisis.prob_m)}</div>
               <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '8px', lineHeight: '1.4' }}>
                 Evalúa si es natural que esta secuencia de 5 números aparezca junta en un sorteo.
               </p>
@@ -192,9 +202,9 @@ export default function AnalizadorManual({ sorteo, scoreMediana, scoreP75, posTo
 
             <div className="card" style={{ margin: 0, background: 'rgba(255, 255, 255, 0.01)' }}>
               <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 'bold' }}>Markov Posicional</div>
-              <div style={{ fontSize: '1.6rem', fontWeight: '800', margin: '8px 0', color: 'var(--text-primary)' }}>{analisis.prob_pos.toFixed(6)}</div>
+              <div style={{ fontSize: '1.6rem', fontWeight: '800', margin: '8px 0', color: 'var(--text-primary)' }}>{formatProb(analisis.prob_pos)}</div>
               <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '8px', lineHeight: '1.4' }}>
-                {analisis.prob_pos > 0 
+                {analisis.prob_pos > 1e-20 
                   ? 'Transición viable con respecto a la última combinación de la lotería real.' 
                   : 'Transición no registrada con respecto al sorteo anterior.'}
               </p>
