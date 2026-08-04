@@ -179,11 +179,23 @@ export default function AnalizadorManual({ sorteo, scoreMediana, scoreP75, posTo
             </div>
           </div>
 
-          <div className="grid-3" style={{ marginTop: '24px' }}>
+          <div className="grid-3" style={{ marginTop: '24px', gap: '16px' }}>
+            <div className="card" style={{ margin: 0, background: 'rgba(255, 255, 255, 0.02)', gridColumn: 'span 3' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 'bold' }}>Índice Compuesto Global</div>
+                  <div style={{ fontSize: '2rem', fontWeight: '800', margin: '4px 0', color: (analisis.composite || 50) >= 60 ? 'var(--accent-green)' : 'var(--accent-blue)' }}>{(analisis.composite || 50).toFixed(1)} / 100</div>
+                </div>
+                <div style={{ maxWidth: '400px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                  Evaluación ponderada en 6 dimensiones: Frecuencia JAX, Transiciones de Markov, Distribución Gaussiana, Entropía de Shannon, Posterior Bayesiano y Presión Hazard de Atraso.
+                </div>
+              </div>
+            </div>
+
             <div className="card" style={{ margin: 0, background: 'rgba(255, 255, 255, 0.01)' }}>
               <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 'bold' }}>Score JAX (Frecuencia)</div>
-              <div style={{ fontSize: '1.6rem', fontWeight: '800', margin: '8px 0', color: 'var(--text-primary)' }}>{analisis.score.toFixed(6)}</div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--accent-blue)', display: 'flex', gap: '4px', alignItems: 'center' }}>
+              <div style={{ fontSize: '1.4rem', fontWeight: '800', margin: '8px 0', color: 'var(--text-primary)' }}>{analisis.score.toFixed(6)}</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--accent-blue)', display: 'flex', gap: '4px', alignItems: 'center' }}>
                 <span>{analisis.score >= scoreMediana ? '▲' : '▼'}</span>
                 <span>{(analisis.score - scoreMediana).toFixed(6)} vs Mediana</span>
               </div>
@@ -192,17 +204,37 @@ export default function AnalizadorManual({ sorteo, scoreMediana, scoreP75, posTo
               </p>
             </div>
 
-             <div className="card" style={{ margin: 0, background: 'rgba(255, 255, 255, 0.01)' }}>
+            <div className="card" style={{ margin: 0, background: 'rgba(255, 255, 255, 0.01)' }}>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 'bold' }}>Gauss & Entropía</div>
+              <div style={{ fontSize: '1.2rem', fontWeight: '700', margin: '8px 0', color: 'var(--text-primary)' }}>
+                Gauss: {(analisis.score_gauss || 0).toFixed(2)} | Entropía: {(analisis.score_entropy || 0).toFixed(2)}
+              </div>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '8px', lineHeight: '1.4' }}>
+                Mide si la suma cae en la campana central (~110) y si los números mantienen suficiente aleatoriedad estructural.
+              </p>
+            </div>
+
+            <div className="card" style={{ margin: 0, background: 'rgba(255, 255, 255, 0.01)' }}>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 'bold' }}>Bayes & Hazard Rate</div>
+              <div style={{ fontSize: '1.2rem', fontWeight: '700', margin: '8px 0', color: 'var(--text-primary)' }}>
+                Bayes: {(analisis.score_bayes || 0).toFixed(2)} | Hazard: {(analisis.score_hazard || 0).toFixed(2)}
+              </div>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '8px', lineHeight: '1.4' }}>
+                Incorpora probabilidades posteriori Dirichlet y la madurez de atraso de las balotas según procesos de Poisson.
+              </p>
+            </div>
+
+            <div className="card" style={{ margin: 0, background: 'rgba(255, 255, 255, 0.01)' }}>
               <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 'bold' }}>Probabilidad Markov Global</div>
-              <div style={{ fontSize: '1.6rem', fontWeight: '800', margin: '8px 0', color: 'var(--text-primary)' }}>{formatProb(analisis.prob_m)}</div>
+              <div style={{ fontSize: '1.4rem', fontWeight: '800', margin: '8px 0', color: 'var(--text-primary)' }}>{formatProb(analisis.prob_m)}</div>
               <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '8px', lineHeight: '1.4' }}>
                 Evalúa si es natural que esta secuencia de 5 números aparezca junta en un sorteo.
               </p>
             </div>
 
-            <div className="card" style={{ margin: 0, background: 'rgba(255, 255, 255, 0.01)' }}>
+            <div className="card" style={{ margin: 0, background: 'rgba(255, 255, 255, 0.01)', gridColumn: 'span 2' }}>
               <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 'bold' }}>Markov Posicional</div>
-              <div style={{ fontSize: '1.6rem', fontWeight: '800', margin: '8px 0', color: 'var(--text-primary)' }}>{formatProb(analisis.prob_pos)}</div>
+              <div style={{ fontSize: '1.4rem', fontWeight: '800', margin: '8px 0', color: 'var(--text-primary)' }}>{formatProb(analisis.prob_pos)}</div>
               <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '8px', lineHeight: '1.4' }}>
                 {analisis.prob_pos > 1e-20 
                   ? 'Transición viable con respecto a la última combinación de la lotería real.' 

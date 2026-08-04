@@ -180,6 +180,145 @@ def calculate_positional_markov_probability(
     return probability
 
 
+def calculate_sum_gaussian_score(combination, mean_sum=110.0, std_sum=26.4):
+    """Calcula un puntaje de campana de Gauss (0 a 1) para la suma de la combinación."""
+    c_sum = sum(combination)
+    score = math.exp(-((c_sum - mean_sum) ** 2) / (2 * (std_sum ** 2)))
+    return max(0.0, min(1.0, score))
+
+
+def calculate_shannon_entropy(combination):
+    """Calcula la entropía de Shannon (0 a 1) basada en las diferencias entre números ordenados."""
+    if len(combination) < 2:
+        return 1.0
+    sorted_c = sorted(combination)
+    diffs = [sorted_c[i + 1] - sorted_c[i] for i in range(len(sorted_c) - 1)]
+    total_diff = sum(diffs)
+    if total_diff == 0:
+        return 0.0
+    probs = [d / total_diff for d in diffs if d > 0]
+    entropy = -sum(p * math.log(p) for p in probs)
+    max_entropy = math.log(len(diffs))
+    normalized_entropy = entropy / max_entropy if max_entropy > 0 else 0.0
+    return max(0.0, min(1.0, normalized_entropy))
+
+
+def calculate_bayesian_dirichlet_score(
+    combination, sb, main_counts_dict, sb_counts_dict, total_draws, alpha=1.0
+):
+    """Calcula la probabilidad a posteriori Dirichlet-Multinomial normalizada (0 a 1)."""
+    if total_draws <= 0:
+        return 0.5
+    prior_prob = 1.0 / N_MAIN_BALLS
+    main_score = 0.0
+    for num in combination:
+        count = main_counts_dict.get(num, 0)
+        post_prob = (count + alpha) / (K_MAIN_BALLS * total_draws + N_MAIN_BALLS * alpha)
+        main_score += post_prob / (prior_prob * 2.0)
+
+    prior_sb_prob = 1.0 / N_SUPER_BALOTA
+    sb_count = sb_counts_dict.get(sb, 0)
+    post_sb_prob = (sb_count + alpha) / (total_draws + N_SUPER_BALOTA * alpha)
+    sb_score = post_sb_prob / (prior_sb_prob * 2.0)
+
+    total_score = (main_score / K_MAIN_BALLS) * 0.8 + (sb_score) * 0.2
+    return max(0.0, min(1.0, total_score))
+
+
+def calculate_gap_hazard_score(combination, sb, df_gap_analysis):
+    """Calcula la presión estadística acumulada (Poisson Hazard Rate) según el atraso de cada número (0 a 1)."""
+    if df_gap_analysis.empty:
+        return 0.5
+    lambda_main = K_MAIN_BALLS / N_MAIN_BALLS
+    lambda_sb = 1.0 / N_SUPER_BALOTA
+
+    hazard_scores = []
+    gap_map = {}
+    for _, row in df_gap_analysis.iterrows():
+        tipo = row.get("Tipo")
+        num = row.get("Número")
+        gap_val = row.get("Brecha (Sorteos)")
+        if gap_val != "N/A" and pd.notna(gap_val):
+            gap_map[(tipo, int(num))] = float(gap_val)
+
+    for num in combination:
+        g = gap_map.get(("Main", num), 0.0)
+        cum_p = 1.0 - math.pow(1.0 - lambda_main, g)
+        hazard_scores.append(cum_p)
+
+    sb_g = gap_map.get(("SB", sb), 0.0)
+    sb_cum_p = 1.0 - math.pow(1.0 - lambda_sb, sb_g)
+
+    avg_main_hazard = sum(hazard_scores) / len(hazard_scores) if hazard_scores else 0.5
+    total_hazard = avg_main_hazard * 0.8 + sb_cum_p * 0.2
+    return max(0.0, min(1.0, total_hazard))
+
+
+def calculate_composite_score(
+    score_jax,
+    prob_markov_global,
+    prob_markov_pos,
+    score_gauss,
+    score_entropy,
+    score_bayes,
+    score_hazard,
+):
+    """Calcula un Índice Predictivo Compuesto Global (0 a 100)."""
+    norm_jax = min(1.0, score_jax / 0.20)
+    norm_markov_g = min(1.0, prob_markov_global * 1e5)
+    norm_markov_p = (
+        min(1.0, prob_markov_pos * 1e5) if prob_markov_pos > 0 else norm_markov_g
+    )
+    markov_combined = 0.5 * norm_markov_g + 0.5 * norm_markov_p
+
+    composite = (
+        0.25 * norm_jax
+        + 0.20 * markov_combined
+        + 0.20 * score_gauss
+        + 0.15 * score_bayes
+        + 0.10 * score_hazard
+        + 0.10 * score_entropy
+    ) * 100.0
+
+    return round(max(0.0, min(100.0, composite)), 2)
+
+
+def generate_wheeling_system(selected_numbers, target_guarantee=3):
+    """Genera un sistema de ruedas combinatorias reducidas (Wheeling System)."""
+    selected_numbers = sorted(list(set(selected_numbers)))
+    if len(selected_numbers) < K_MAIN_BALLS:
+        raise ValueError(f"Se requieren al menos {K_MAIN_BALLS} números seleccionados.")
+    if len(selected_numbers) == K_MAIN_BALLS:
+        return [selected_numbers]
+
+    all_combinations = list(combinations(selected_numbers, K_MAIN_BALLS))
+    if len(selected_numbers) <= 8 and target_guarantee >= 4:
+        return [list(c) for c in all_combinations]
+
+    uncovered_subsets = set(combinations(selected_numbers, target_guarantee))
+    selected_wheels = []
+
+    while uncovered_subsets and len(selected_wheels) < len(all_combinations):
+        best_comb = None
+        best_covered = set()
+        for comb in all_combinations:
+            if comb in selected_wheels:
+                continue
+            comb_subsets = set(combinations(comb, target_guarantee))
+            covered = comb_subsets.intersection(uncovered_subsets)
+            if len(covered) > len(best_covered):
+                best_covered = covered
+                best_comb = comb
+
+        if not best_comb:
+            break
+
+        selected_wheels.append(list(best_comb))
+        uncovered_subsets -= best_covered
+
+    return selected_wheels
+
+
 def get_number_weights(results, n_main_balls, n_super_balota):
     """Asigna pesos a los números basados en las métricas calculadas."""
     weights = defaultdict(float)
@@ -241,7 +380,25 @@ def get_number_weights(results, n_main_balls, n_super_balota):
         for _, row in top_cold.iterrows():
             num = row["Número"]
             key = "sb" if row.get("Tipo") == "SB" else "main"
-            weights[(key, num)] += 0.1
+            weights[(key, num)] += 0.25
+
+    # Inferencia Bayesiana
+    if "main_counts_dict" in results and "total_draws" in results:
+        main_counts = results["main_counts_dict"]
+        tot = results["total_draws"]
+        if tot > 0:
+            for num in range(1, n_main_balls + 1):
+                post_prob = (main_counts.get(num, 0) + 1.0) / (
+                    5 * tot + n_main_balls * 1.0
+                )
+                weights[("main", num)] += post_prob * 10.0
+        sb_counts = results.get("sb_counts_dict", {})
+        if tot > 0:
+            for num in range(1, n_super_balota + 1):
+                post_sb_prob = (sb_counts.get(num, 0) + 1.0) / (
+                    tot + n_super_balota * 1.0
+                )
+                weights[("sb", num)] += post_sb_prob * 5.0
 
     # Markov Global
     if not results["df_transition_matrix"].empty:
@@ -275,6 +432,7 @@ def get_number_weights(results, n_main_balls, n_super_balota):
                         weights[("sb", num)] += (sb_probs[num] / max_sb_prob) * 0.25
 
     return weights
+
 
 
 def generate_probable_combinations(num_combinations, results, weights):
@@ -404,9 +562,13 @@ def generate_probable_combinations(num_combinations, results, weights):
             combination = sorted(list(chosen))
             sb = random.choices(sb_numbers, weights=sb_weights, k=1)[0]
 
-        # Validaciones
-        c_sum = sum(combination)
-        if top_sums and not any(abs(c_sum - s) <= 5 for s in top_sums):
+        # Validaciones de Gauss y Entropía
+        score_gauss = calculate_sum_gaussian_score(combination)
+        if score_gauss < 0.20:
+            continue
+
+        score_entropy = calculate_shannon_entropy(combination)
+        if score_entropy < 0.35:
             continue
 
         evens = sum(1 for x in combination if x % 2 == 0)
@@ -429,9 +591,49 @@ def generate_probable_combinations(num_combinations, results, weights):
                 results["total_draws_jax_val"],
             )
         )
-        generated.append((combination, sb, score))
 
-    generated.sort(key=lambda x: x[2], reverse=True)
+        prob_m = float(calculate_sequence_probability(combination, transition_matrix))
+        prob_pos = float(
+            calculate_positional_markov_probability(
+                combination,
+                sb,
+                results.get("positional_matrices", {}),
+                last_combination,
+                last_sb_val,
+            )
+            if positional_markov_possible
+            else 0.0
+        )
+
+        score_bayes = calculate_bayesian_dirichlet_score(
+            combination,
+            sb,
+            results.get("main_counts_dict", {}),
+            results.get("sb_counts_dict", {}),
+            results.get("total_draws", 0),
+        )
+        score_hazard = calculate_gap_hazard_score(
+            combination, sb, results.get("df_gap_analysis", pd.DataFrame())
+        )
+
+        composite = calculate_composite_score(
+            score, prob_m, prob_pos, score_gauss, score_entropy, score_bayes, score_hazard
+        )
+
+        generated.append(
+            (
+                combination,
+                sb,
+                score,
+                composite,
+                score_gauss,
+                score_entropy,
+                score_bayes,
+                score_hazard,
+            )
+        )
+
+    generated.sort(key=lambda x: x[3], reverse=True)
     return generated
 
 
@@ -519,6 +721,10 @@ def analizar_sorteo(nombre_hoja, df):
         )
     else:
         chi2_s, p_s = 0, 1.0
+
+    res["main_counts_dict"] = obs_main.to_dict()
+    res["sb_counts_dict"] = obs_sb.to_dict()
+    res["total_draws"] = len(df)
 
     res["df_chi2"] = pd.DataFrame(
         {
@@ -911,9 +1117,10 @@ def main():
     while True:
         print("")
         print("--- MENÚ INTERACTIVO ---")
-        print("1. Jugada Manual")
-        print("2. Generación Automática")
-        print("3. Salir")
+        print("1. Jugada Manual (Diagnóstico Multimodelo de 6 Dimensiones)")
+        print("2. Generación Automática (Sugerencias Ponderadas)")
+        print("3. Rueda Combinatoria Reducida (Wheeling System)")
+        print("4. Salir")
         opc = input("Seleccione una opción: ")
 
         if opc in ["1", "2"]:
@@ -979,37 +1186,70 @@ def main():
                                     "❌ Error: Por favor, ingrese un número entero válido."
                                 )
 
+                        nums_sorted = sorted(nums)
                         score = float(
                             calculate_frequency_score_jax(
-                                jnp.array(nums),
+                                jnp.array(nums_sorted),
                                 jnp.array(sb),
                                 r["b_cols_jax"],
                                 r["sb_col_jax"],
                                 r["total_draws_jax_val"],
                             )
                         )
-                        prob = calculate_sequence_probability(
-                            sorted(nums), r["df_transition_matrix"]
+                        prob_m = float(
+                            calculate_sequence_probability(
+                                nums_sorted, r["df_transition_matrix"]
+                            )
                         )
-                        print(f"\n✅ Resultados {ts} para {sorted(nums)} + ({sb}):")
-                        print(f"   - Score JAX: {score:.4f}")
-                        print(f"   - Prob. Markov Global: {prob:.8f}")
                         prob_pos_val = 0.0
                         if "positional_matrices" in r:
-                            prob_pos_val = calculate_positional_markov_probability(
-                                sorted(nums),
-                                sb,
-                                r["positional_matrices"],
-                                r["last_combination"],
-                                r["last_sb"],
+                            prob_pos_val = float(
+                                calculate_positional_markov_probability(
+                                    nums_sorted,
+                                    sb,
+                                    r["positional_matrices"],
+                                    r["last_combination"],
+                                    r["last_sb"],
+                                )
                             )
-                            print(f"   - Prob. Markov Posicional: {prob_pos_val:.8f}")
+
+                        score_gauss = calculate_sum_gaussian_score(nums_sorted)
+                        score_entropy = calculate_shannon_entropy(nums_sorted)
+                        score_bayes = calculate_bayesian_dirichlet_score(
+                            nums_sorted,
+                            sb,
+                            r.get("main_counts_dict", {}),
+                            r.get("sb_counts_dict", {}),
+                            r.get("total_draws", 0),
+                        )
+                        score_hazard = calculate_gap_hazard_score(
+                            nums_sorted, sb, r.get("df_gap_analysis", pd.DataFrame())
+                        )
+                        composite = calculate_composite_score(
+                            score,
+                            prob_m,
+                            prob_pos_val,
+                            score_gauss,
+                            score_entropy,
+                            score_bayes,
+                            score_hazard,
+                        )
+
+                        print(f"\n✅ DIAGNÓSTICO DE JUGADA MANUAL ({ts}): {nums_sorted} + SB({sb})")
+                        print(f"   🏆 ÍNDICE COMPUESTO GLOBAL: {composite:.1f} / 100")
+                        print(f"   📊 1. Score JAX (Frecuencia): {score:.6f}")
+                        print(f"   📈 2. Score Gaussiano (Suma={sum(nums_sorted)}): {score_gauss:.4f}")
+                        print(f"   🔀 3. Entropía de Shannon (Aleatoriedad): {score_entropy:.4f}")
+                        print(f"   🎲 4. Prob. Inferencia Bayesiana: {score_bayes:.4f}")
+                        print(f"   ⏳ 5. Presión Poisson Hazard Rate (Atrasos): {score_hazard:.4f}")
+                        print(f"   ⛓️ 6. Markov Global: {prob_m:.8f} | Markov Posicional: {prob_pos_val:.8f}")
+
                         historial_sesion.append(f"\n--- Jugada Manual {ts} ---")
                         historial_sesion.append(
-                            f"Combinación: {sorted(nums)} + SB({sb})"
+                            f"Combinación: {nums_sorted} + SB({sb}) | ÍNDICE COMPUESTO: {composite:.1f}/100"
                         )
                         historial_sesion.append(
-                            f"  Score JAX: {score:.4f} | M.Global: {prob:.8f} | M.Posicional: {prob_pos_val:.8f}"
+                            f"  JAX: {score:.6f} | Gauss: {score_gauss:.4f} | Entropía: {score_entropy:.4f} | Bayes: {score_bayes:.4f} | Hazard: {score_hazard:.4f} | M.Global: {prob_m:.8f} | M.Pos: {prob_pos_val:.8f}"
                         )
                     except Exception as e:
                         print(f"❌ Ocurrió un error inesperado: {e}")
@@ -1020,7 +1260,6 @@ def main():
                         NUM_COMBINATIONS_TO_GENERATE, r, weights
                     )
 
-                    # Calcular Score promedio de ganadores para referencia
                     df_ganadores = analizar_ganadores_historicos(r)
                     score_meta = (
                         df_ganadores["Score JAX"].mean()
@@ -1034,7 +1273,13 @@ def main():
 
                     data_res = []
                     has_pos_markov = "positional_matrices" in r
-                    for comb, sb, score in combs:
+                    for item in combs:
+                        if len(item) == 8:
+                            comb, sb, score, composite, score_gauss, score_entropy, score_bayes, score_hazard = item
+                        else:
+                            comb, sb, score = item[0], item[1], item[2]
+                            composite, score_gauss, score_entropy, score_bayes, score_hazard = 50.0, 0.5, 0.5, 0.5, 0.5
+
                         prob_m = calculate_sequence_probability(
                             comb, r["df_transition_matrix"]
                         )
@@ -1053,7 +1298,12 @@ def main():
                             (
                                 ", ".join(map(str, comb)),
                                 sb,
+                                f"{composite:.1f}/100",
                                 f"{score:.4f}",
+                                f"{score_gauss:.2f}",
+                                f"{score_entropy:.2f}",
+                                f"{score_bayes:.2f}",
+                                f"{score_hazard:.2f}",
                                 f"{prob_m:.8f}",
                                 f"{prob_pos:.8f}",
                                 "⭐" if score >= score_meta else "",
@@ -1065,20 +1315,80 @@ def main():
                         columns=[
                             "Combinación",
                             "SB",
-                            "Score",
+                            "Índice Compuesto",
+                            "Score JAX",
+                            "Gauss",
+                            "Entropía",
+                            "Bayes",
+                            "Hazard",
                             "M. Global",
                             "M. Posicional",
                             "ADN",
                         ],
                     )
-                    mostrar_resultado(df_res, f"Sugerencias {ts}")
+                    mostrar_resultado(df_res, f"Sugerencias Multimodelo {ts}")
                     historial_sesion.append(
                         f"\n--- Generación Automática {ts} (Score meta: {score_meta:.4f}) ---"
                     )
                     historial_sesion.append(df_res.to_string(index=False))
 
         elif opc == "3":
-            # Preguntar si guardar resultados antes de salir
+            print("\n--- ⚙️ SISTEMA DE RUEDAS COMBINATORIAS REDUCIDAS (WHEELING SYSTEM) ---")
+            try:
+                print("¿Para qué sorteo deseas aplicar la rueda?")
+                print("1. Baloto")
+                print("2. Revancha")
+                print("3. Ambos (Baloto + Revancha)")
+                sorteo_rueda_opc = input("Seleccione (1-3): ").strip()
+                sorteo_nombre = "Baloto y Revancha" if sorteo_rueda_opc == "3" else ("Revancha" if sorteo_rueda_opc == "2" else "Baloto")
+
+                raw_nums = input("\nIngrese entre 5 y 12 números principales (1-43) separados por espacio o coma (ej: 4 8 15 23 31 38 42): ")
+                nums_input = list(set([int(x) for x in re.split(r"[,\s]+", raw_nums.strip()) if x.isdigit() and 1 <= int(x) <= N_MAIN_BALLS]))
+                if len(nums_input) < 5 or len(nums_input) > 12:
+                    print(f"❌ Error: Debe ingresar entre 5 y 12 números válidos entre 1 y {N_MAIN_BALLS}.")
+                    continue
+
+                sb_input = input(f"Ingrese una o varias Super Balotas (1-{N_SUPER_BALOTA}) separadas por espacio/coma (ej: 3 7 11), o Enter para usar la favorita: ").strip()
+                sbs_list = list(set([int(x) for x in re.split(r"[,\s]+", sb_input) if x.isdigit() and 1 <= int(x) <= N_SUPER_BALOTA]))
+                if not sbs_list:
+                    ref_key = "Revancha" if sorteo_rueda_opc == "2" else "Baloto"
+                    sb_val = resultados[ref_key]["last_sb"] if ref_key in resultados else 7
+                    sbs_list = [sb_val]
+                    print(f"   ℹ️ Se usará Super Balota sugerida: {sb_val}")
+                else:
+                    sbs_list = sorted(sbs_list)
+
+                garantia = 3
+                raw_garantia = input("Seleccione nivel de garantía de aciertos [3 para 3 aciertos (recomendado), 4 para 4 aciertos]: ")
+                if raw_garantia.strip() == "4":
+                    garantia = 4
+
+                ruedas_base = generate_wheeling_system(nums_input, target_guarantee=garantia)
+
+                # Generar tiquetes finales combinando ruedas base x superbalotas
+                tiquetes_finales = []
+                for comb in ruedas_base:
+                    for sb_val in sbs_list:
+                        tiquetes_finales.append((comb, sb_val))
+
+                print(f"\n🎉 ¡RUEDA GENERADA EXITOSAMENTE PARA {sorteo_nombre.upper()}!")
+                print(f"   Números seleccionados ({len(nums_input)}): {sorted(nums_input)}")
+                print(f"   Super Balotas fijadas ({len(sbs_list)}): {sbs_list}")
+                print(f"   Nivel de garantía: {garantia} Aciertos")
+                print(f"   Combinaciones base de 5 balotas: {len(ruedas_base)}")
+                print(f"   Total de tiquetes de juego requeridos: {len(tiquetes_finales)}")
+                print("\n📋 TIQUETES DE JUEGO SUGERIDOS:")
+                for idx, (tiquete, sb_val) in enumerate(tiquetes_finales, 1):
+                    print(f"   Tiquete #{idx}: {tiquete} + SB({sb_val}) [{sorteo_nombre}]")
+
+                historial_sesion.append(f"\n--- Rueda Combinatoria ({sorteo_nombre}) ---")
+                historial_sesion.append(f"Selección: {sorted(nums_input)} | SBs: {sbs_list} | Garantía: {garantia} aciertos | Total Tiquetes: {len(tiquetes_finales)}")
+                for idx, (tiquete, sb_val) in enumerate(tiquetes_finales, 1):
+                    historial_sesion.append(f"  Tiquete #{idx}: {tiquete} + SB({sb_val})")
+            except Exception as e:
+                print(f"❌ Error al procesar rueda combinatoria: {e}")
+
+        elif opc == "4":
             guardar = input(
                 "\n¿Deseas guardar los resultados en un archivo TXT? (s/n): "
             )

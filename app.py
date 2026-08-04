@@ -227,7 +227,13 @@ def generar():
 
     data_res = []
     has_pos_markov = "positional_matrices" in r
-    for comb, sb, score in combinaciones:
+    for item in combinaciones:
+        if len(item) == 8:
+            comb, sb, score, composite, score_gauss, score_entropy, score_bayes, score_hazard = item
+        else:
+            comb, sb, score = item[0], item[1], item[2]
+            composite, score_gauss, score_entropy, score_bayes, score_hazard = 50.0, 0.5, 0.5, 0.5, 0.5
+
         prob_m = gb.calculate_sequence_probability(comb, r["df_transition_matrix"])
         prob_pos = (
             gb.calculate_positional_markov_probability(
@@ -242,6 +248,11 @@ def generar():
                 "combinacion": [int(x) for x in comb],
                 "sb": int(sb),
                 "score": float(score),
+                "composite": float(composite),
+                "score_gauss": float(score_gauss),
+                "score_entropy": float(score_entropy),
+                "score_bayes": float(score_bayes),
+                "score_hazard": float(score_hazard),
                 "prob_m": float(prob_m),
                 "prob_pos": float(prob_pos),
             }
@@ -296,15 +307,88 @@ def analizar():
             r["last_sb"],
         )
 
+    score_gauss = float(gb.calculate_sum_gaussian_score(jugada_ordenada))
+    score_entropy = float(gb.calculate_shannon_entropy(jugada_ordenada))
+    score_bayes = float(
+        gb.calculate_bayesian_dirichlet_score(
+            jugada_ordenada,
+            sb,
+            r.get("main_counts_dict", {}),
+            r.get("sb_counts_dict", {}),
+            r.get("total_draws", 0),
+        )
+    )
+    score_hazard = float(
+        gb.calculate_gap_hazard_score(
+            jugada_ordenada, sb, r.get("df_gap_analysis", pd.DataFrame())
+        )
+    )
+    composite = float(
+        gb.calculate_composite_score(
+            score, prob_m, prob_pos, score_gauss, score_entropy, score_bayes, score_hazard
+        )
+    )
+
     return jsonify(
         {
             "combinacion": jugada_ordenada,
             "sb": sb,
             "score": score,
+            "composite": composite,
+            "score_gauss": score_gauss,
+            "score_entropy": score_entropy,
+            "score_bayes": score_bayes,
+            "score_hazard": score_hazard,
             "prob_m": prob_m,
             "prob_pos": prob_pos,
         }
     )
+
+
+@app.route("/api/rueda", methods=["POST"])
+def rueda():
+    data = request.get_json() or {}
+    numeros = data.get("numeros", [])
+    garantia = int(data.get("garantia", 3))
+    raw_sbs = data.get("sbs", [])
+    if not raw_sbs and "sb" in data and data["sb"] is not None:
+        raw_sbs = [data["sb"]]
+    if not raw_sbs:
+        raw_sbs = [7]
+
+    sbs = sorted(list(set([int(x) for x in raw_sbs if 1 <= int(x) <= 16])))
+    if not sbs:
+        sbs = [7]
+
+    sorteo = data.get("sorteo", "Baloto")
+
+    if len(numeros) < 5 or len(numeros) > 15:
+        return jsonify({"error": "Debe seleccionar entre 5 y 15 números para la rueda."}), 400
+
+    try:
+        base_wheels = gb.generate_wheeling_system(numeros, target_guarantee=garantia)
+        tiquetes_finales = []
+        for comb in base_wheels:
+            for sb_val in sbs:
+                tiquetes_finales.append({
+                    "combinacion": comb,
+                    "sb": sb_val
+                })
+
+        return jsonify(
+            {
+                "ruedas": base_wheels,
+                "tiquetes_finales": tiquetes_finales,
+                "total_tiquetes": len(tiquetes_finales),
+                "tiquetes_base": len(base_wheels),
+                "superbalotas": sbs,
+                "sorteo": sorteo,
+                "numeros_seleccionados": sorted([int(x) for x in set(numeros)]),
+                "garantia": garantia,
+            }
+        )
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
 
 @app.route("/api/recargar", methods=["POST"])

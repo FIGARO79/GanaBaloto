@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Sugerencias from './components/Sugerencias.jsx';
 import AnalizadorManual from './components/AnalizadorManual.jsx';
+import RuedaCombinatoria from './components/RuedaCombinatoria.jsx';
 import MetricasHistorial from './components/MetricasHistorial.jsx';
 import Metodologia from './components/Metodologia.jsx';
 import AcercaDe from './components/AcercaDe.jsx';
@@ -217,6 +218,12 @@ function App() {
             📝 Analizador Manual
           </button>
           <button 
+            className={`tab-btn ${activeTab === 'rueda' ? 'active' : ''}`}
+            onClick={() => setActiveTab('rueda')}
+          >
+            🔀 Ruedas de Juego
+          </button>
+          <button 
             className={`tab-btn ${activeTab === 'metricas' ? 'active' : ''}`}
             onClick={() => setActiveTab('metricas')}
           >
@@ -316,6 +323,10 @@ function App() {
                 scoreP75={data.score_p75}
                 posTopData={data.pos_top_data}
               />
+            )}
+
+            {activeTab === 'rueda' && (
+              <RuedaCombinatoria />
             )}
             
             {activeTab === 'metricas' && (

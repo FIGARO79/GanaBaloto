@@ -62,11 +62,11 @@ export default function Sugerencias({ sorteo, scoreMediana, scoreP75 }) {
 
         <div className="alert alert-info">
           <div>
-            <strong>💡 ¿Cómo interpretar las sugerencias y puntajes?</strong>
+            <strong>💡 ¿Cómo interpretar las sugerencias y métricas multimodelo?</strong>
             <ul style={{ margin: '8px 0 0 0', paddingLeft: '20px' }}>
-              <li><strong>Score JAX (Frecuencia):</strong> Mide la popularidad histórica combinada de los números. Un score alto indica que las balotas han salido frecuentemente. Las combinaciones premium superan el percentil 75 histórico (<code>{scoreP75.toFixed(4)}</code>).</li>
-              <li><strong>Markov Global:</strong> Mide la probabilidad de que esta secuencia completa ocurra según las transiciones del historial.</li>
-              <li><strong>Markov Posicional:</strong> Mide la transición con respecto al <strong>último sorteo real jugado</strong>.</li>
+              <li><strong>Índice Compuesto (0 - 100):</strong> Evalúa de forma unificada 6 dimensiones (JAX, Markov, Gauss, Bayes, Hazard y Entropía).</li>
+              <li><strong>Suma Gaussiana & Entropía:</strong> Garantizan que la combinación no sea un patrón artificial y tenga la variabilidad estructural ideal.</li>
+              <li><strong>Inferencia Bayesiana & Hazard Rate:</strong> Incorporan la probabilidad a posteriori y la "presión estadística" de números atrasados.</li>
             </ul>
           </div>
         </div>
@@ -94,7 +94,7 @@ export default function Sugerencias({ sorteo, scoreMediana, scoreP75 }) {
       {loading && (
         <div className="loading-container">
           <div className="spinner"></div>
-          <p>Simulando millones de transiciones matemáticas con JAX...</p>
+          <p>Simulando millones de transiciones estocásticas y modelos Bayesianos con JAX...</p>
         </div>
       )}
 
@@ -109,6 +109,7 @@ export default function Sugerencias({ sorteo, scoreMediana, scoreP75 }) {
           <h3 className="card-title" style={{ marginBottom: '16px' }}>Combinaciones Recomendadas:</h3>
           {combinaciones.map((item, index) => {
             const badge = getScoreBadge(item.score);
+            const composite = item.composite || 50;
             return (
               <div key={index} className="card">
                 <div className="sugerencia-card-container">
@@ -116,7 +117,7 @@ export default function Sugerencias({ sorteo, scoreMediana, scoreP75 }) {
                     <span style={{ fontWeight: '700', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
                       SUGERENCIA #{index + 1} {item.score >= scoreP75 && '🌟 (ADN Premium)'} {item.score >= scoreMediana && item.score < scoreP75 && '👍 (Frecuencia Media)'}
                     </span>
-                    <div className="balotas-container">
+                    <div className="balotas-container" style={{ margin: '10px 0 16px 0' }}>
                       {item.combinacion.map((num, i) => (
                         <div key={i} className="balota balota-principal">
                           <div className="balota-inner">{num}</div>
@@ -127,21 +128,35 @@ export default function Sugerencias({ sorteo, scoreMediana, scoreP75 }) {
                         <div className="balota-inner">{item.sb}</div>
                       </div>
                     </div>
+                    
+                    <div style={{ background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '0.85rem', fontWeight: 'bold' }}>
+                        <span>Índice Compuesto Global</span>
+                        <span style={{ color: 'var(--accent-blue)' }}>{composite.toFixed(1)} / 100</span>
+                      </div>
+                      <div style={{ height: '6px', width: '100%', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${composite}%`, background: composite >= 60 ? 'var(--accent-green)' : 'var(--accent-blue)', transition: 'width 0.3s' }}></div>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="grid-2" style={{ gap: '16px', minWidth: '280px' }}>
+                  <div className="grid-2" style={{ gap: '12px', minWidth: '300px' }}>
                     <div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 'bold' }}>Score JAX</div>
-                      <div style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)' }}>{item.score.toFixed(6)}</div>
-                      <div style={{ fontSize: '0.75rem', ...badge.style }}>{badge.text}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 'bold' }}>Score JAX</div>
+                      <div style={{ fontSize: '1rem', fontWeight: '700', color: 'var(--text-primary)' }}>{item.score.toFixed(6)}</div>
+                      <div style={{ fontSize: '0.7rem', ...badge.style }}>{badge.text}</div>
                     </div>
                     <div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 'bold' }}>Markov Global</div>
-                      <div style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)' }}>{formatProb(item.prob_m)}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 'bold' }}>Gauss & Entropía</div>
+                      <div style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--text-primary)' }}>G: {(item.score_gauss || 0).toFixed(2)} | E: {(item.score_entropy || 0).toFixed(2)}</div>
                     </div>
-                    <div style={{ gridColumn: 'span 2' }}>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 'bold' }}>Markov Posicional</div>
-                      <div style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)' }}>{formatProb(item.prob_pos)}</div>
+                    <div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 'bold' }}>Bayes & Hazard</div>
+                      <div style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--text-primary)' }}>B: {(item.score_bayes || 0).toFixed(2)} | H: {(item.score_hazard || 0).toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 'bold' }}>Markov (Global / Pos)</div>
+                      <div style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-primary)' }}>{formatProb(item.prob_m)} / {formatProb(item.prob_pos)}</div>
                     </div>
                   </div>
                 </div>
