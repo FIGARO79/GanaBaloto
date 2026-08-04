@@ -329,6 +329,12 @@ def analizar():
         )
     )
 
+    df_ganadores_m = gb.analizar_ganadores_historicos(r)
+    score_med_m = float(df_ganadores_m["Score JAX"].median()) if not df_ganadores_m.empty else 0.1450
+    veredicto_lines = gb.obtener_veredicto_cualitativo(
+        jugada_ordenada, sb, composite, score, score_gauss, score_entropy, score_bayes, score_hazard, score_med_m
+    )
+
     return jsonify(
         {
             "combinacion": jugada_ordenada,
@@ -341,6 +347,7 @@ def analizar():
             "score_hazard": score_hazard,
             "prob_m": prob_m,
             "prob_pos": prob_pos,
+            "veredicto": veredicto_lines,
         }
     )
 

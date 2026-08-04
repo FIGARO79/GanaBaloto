@@ -283,6 +283,67 @@ def calculate_composite_score(
     return round(max(0.0, min(100.0, composite)), 2)
 
 
+def obtener_veredicto_cualitativo(
+    combination,
+    sb,
+    composite,
+    score_jax,
+    score_gauss,
+    score_entropy,
+    score_bayes,
+    score_hazard,
+    score_mediana=0.1450,
+):
+    """Genera una interpretación cualitativa y sencilla para el usuario no técnico."""
+    lines = []
+    if composite >= 70.0:
+        calificacion = "🟢 EXCELENTE (Combinación con perfil probabilístico óptimo)"
+        veredicto_icon = "🌟"
+    elif composite >= 55.0:
+        calificacion = "🟡 BUENA / PROMEDIO (Combinación equilibrada dentro del estándar)"
+        veredicto_icon = "👍"
+    else:
+        calificacion = "🔴 ATÍPICA / POCO PROBABLE (Presenta desviaciones estocásticas)"
+        veredicto_icon = "⚠️"
+
+    lines.append(f"{veredicto_icon} CALIFICACIÓN GENERAL: {calificacion}")
+    lines.append("💡 VEREDICTO DE INTERPRETACIÓN SENCILLA:")
+
+    c_sum = sum(combination)
+    if score_gauss >= 0.70:
+        lines.append(f"  • 🟢 Suma de balotas ({c_sum}): EXCELENTE. Cae en el rango dorado central (~90 a 130).")
+    elif score_gauss >= 0.40:
+        lines.append(f"  • 🟡 Suma de balotas ({c_sum}): ACEPTABLE. Ligeramente desviada del centro pero viable.")
+    else:
+        lines.append(f"  • 🔴 Suma de balotas ({c_sum}): ATÍPICA. Extremadamente baja o alta respecto al historial.")
+
+    if score_entropy >= 0.75:
+        lines.append(f"  • 🟢 Aleatoriedad / Estructura (Entropía {score_entropy:.2f}): EXCELENTE DISPERSIÓN. Sin patrones obvios.")
+    elif score_entropy >= 0.50:
+        lines.append(f"  • 🟡 Aleatoriedad / Estructura (Entropía {score_entropy:.2f}): ACEPTABLE. Cierta cercanía en balotas.")
+    else:
+        lines.append(f"  • 🔴 Aleatoriedad / Estructura (Entropía {score_entropy:.2f}): CONSECUTIVOS / POCO ALEATORIA.")
+
+    if score_jax >= score_mediana:
+        lines.append(f"  • 🟢 Frecuencia Histórica (JAX {score_jax:.4f}): FRECUENTE. Buena presencia en sorteos premiados.")
+    else:
+        lines.append(f"  • 🟡 Frecuencia Histórica (JAX {score_jax:.4f}): POCO FRECUENTE. Incluye balotas menos habituales.")
+
+    if score_hazard >= 0.60:
+        lines.append(f"  • 🟢 Presión por Atraso (Hazard {score_hazard:.2f}): ALTA MADUREZ. Balotas frías listas para retornar.")
+    else:
+        lines.append(f"  • 🔵 Presión por Atraso (Hazard {score_hazard:.2f}): RECIENTES. Balotas aparecidas recientemente.")
+
+    if composite >= 70.0:
+        lines.append("📌 CONSEJO FINAL: Excelente jugada, cumple con todos los filtros probabilísticos recomendados.")
+    elif composite >= 55.0:
+        lines.append("📌 CONSEJO FINAL: Jugada balanceada y adecuada para participar.")
+    else:
+        lines.append("📌 CONSEJO FINAL: Te sugerimos ajustar algunos números para nivelar la suma y mejorar la dispersión.")
+
+    return lines
+
+
 def generate_wheeling_system(selected_numbers, target_guarantee=3):
     """Genera un sistema de ruedas combinatorias reducidas (Wheeling System)."""
     selected_numbers = sorted(list(set(selected_numbers)))
@@ -1244,13 +1305,20 @@ def main():
                         print(f"   ⏳ 5. Presión Poisson Hazard Rate (Atrasos): {score_hazard:.4f}")
                         print(f"   ⛓️ 6. Markov Global: {prob_m:.8f} | Markov Posicional: {prob_pos_val:.8f}")
 
+                        df_ganadores_m = analizar_ganadores_historicos(r)
+                        score_med_m = df_ganadores_m["Score JAX"].median() if not df_ganadores_m.empty else 0.1450
+                        veredicto_lines = obtener_veredicto_cualitativo(
+                            nums_sorted, sb, composite, score, score_gauss, score_entropy, score_bayes, score_hazard, score_med_m
+                        )
+                        print("\n" + "=" * 66)
+                        print("\n".join(veredicto_lines))
+                        print("=" * 66)
+
                         historial_sesion.append(f"\n--- Jugada Manual {ts} ---")
                         historial_sesion.append(
                             f"Combinación: {nums_sorted} + SB({sb}) | ÍNDICE COMPUESTO: {composite:.1f}/100"
                         )
-                        historial_sesion.append(
-                            f"  JAX: {score:.6f} | Gauss: {score_gauss:.4f} | Entropía: {score_entropy:.4f} | Bayes: {score_bayes:.4f} | Hazard: {score_hazard:.4f} | M.Global: {prob_m:.8f} | M.Pos: {prob_pos_val:.8f}"
-                        )
+                        historial_sesion.append("\n".join(veredicto_lines))
                     except Exception as e:
                         print(f"❌ Ocurrió un error inesperado: {e}")
                 else:

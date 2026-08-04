@@ -179,6 +179,23 @@ export default function AnalizadorManual({ sorteo, scoreMediana, scoreP75, posTo
             </div>
           </div>
 
+          {/* Caja de Veredicto Cualitativo Sencillo */}
+          {analisis.veredicto && (
+            <div className="alert alert-info" style={{ marginTop: '20px', background: (analisis.composite || 50) >= 60 ? 'rgba(34, 197, 94, 0.08)' : 'rgba(59, 130, 246, 0.08)', borderColor: (analisis.composite || 50) >= 60 ? 'var(--accent-green)' : 'var(--accent-blue)' }}>
+              <div style={{ fontWeight: 'bold', fontSize: '1rem', marginBottom: '8px' }}>
+                {analisis.veredicto[0]}
+              </div>
+              <ul style={{ margin: '8px 0', paddingLeft: '20px', fontSize: '0.9rem', lineHeight: '1.6' }}>
+                {analisis.veredicto.slice(2, -1).map((line, idx) => (
+                  <li key={idx}>{line.replace(/^  • /, '')}</li>
+                ))}
+              </ul>
+              <div style={{ marginTop: '10px', fontWeight: 'bold', color: 'var(--text-primary)', fontSize: '0.9rem' }}>
+                {analisis.veredicto[analisis.veredicto.length - 1]}
+              </div>
+            </div>
+          )}
+
           <div className="grid-3" style={{ marginTop: '24px', gap: '16px' }}>
             <div className="card" style={{ margin: 0, background: 'rgba(255, 255, 255, 0.02)', gridColumn: 'span 3' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
