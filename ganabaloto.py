@@ -1341,7 +1341,7 @@ def main():
 
                     data_res = []
                     has_pos_markov = "positional_matrices" in r
-                    for item in combs:
+                    for idx, item in enumerate(combs):
                         if len(item) == 8:
                             comb, sb, score, composite, score_gauss, score_entropy, score_bayes, score_hazard = item
                         else:
@@ -1362,11 +1362,15 @@ def main():
                             if has_pos_markov
                             else 0.0
                         )
+
+                        badge_composite = "🏆" if idx == 0 else ("🌟" if composite >= 70.0 else "")
+                        badge_adn = "🧬" if score >= score_meta else ""
+
                         data_res.append(
                             (
                                 ", ".join(map(str, comb)),
                                 sb,
-                                f"{composite:.1f}/100",
+                                f"{composite:.1f}/100 {badge_composite}".strip(),
                                 f"{score:.4f}",
                                 f"{score_gauss:.2f}",
                                 f"{score_entropy:.2f}",
@@ -1374,7 +1378,7 @@ def main():
                                 f"{score_hazard:.2f}",
                                 f"{prob_m:.8f}",
                                 f"{prob_pos:.8f}",
-                                "⭐" if score >= score_meta else "",
+                                badge_adn,
                             )
                         )
 

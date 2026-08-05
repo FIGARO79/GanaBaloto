@@ -28,17 +28,18 @@ Esta guía explica de forma sencilla cada cálculo del script con ejemplos reale
     *   **NORMAL (6-12):** Ciclo habitual.
     *   **ALTA (13-25):** **¡Número Maduro!** Estadísticamente está "retrasado" y tiene mayor probabilidad de aparecer pronto.
 
-## 6. Puntaje de Frecuencia (Score JAX) y Estrella (⭐) ⚡
-*   **Score JAX:** Calificación de 0 a 1 para la combinación.
-*   **La Estrella (⭐):** Si ves una estrella en la columna **"ADN Ganador"**, significa que esa combinación sugerida tiene un Score **igual o superior** al promedio de los ganadores reales del pasado.
-*   **Ejemplo:** Si el promedio de ganadores es 0.145 y tu sugerencia tiene **0.1510**, recibirá una **⭐**.
+## 6. Puntaje de Frecuencia (Score JAX) y Distintivos (🏆 / 🌟 / 🧬) ⚡
+*   **Score JAX:** Calificación de 0 a 1 para la frecuencia e intensidad histórica de la combinación.
+*   **Trofeo / Estrella Global (🏆 / 🌟):** Resalta la combinación con **mayor puntuación en el Índice Compuesto** (🏆 Top #1 Recomendación) o con perfil óptimo general (🌟 $\ge 70/100$).
+*   **ADN Ganador JAX (🧬):** Si ves el símbolo **🧬** en la columna **"ADN"**, significa que esa combinación sugerida supera el Score promedio de los ganadores reales del pasado.
 
 ---
 
 ## 💡 Estrategia Maestra
-1.  Busca combinaciones con la **Estrella (⭐)**.
-2.  Verifica que incluyan al menos un número con **Brecha (Gap) alta** (entre 13 y 20).
-3.  Asegúrate de que la **Super Balota** sea una de las "Calientes".
+1.  Prioriza la combinación con **Trofeo (🏆)** o la de mayor **Índice Compuesto**.
+2.  Busca combinaciones respaldadas con **ADN JAX (🧬)**.
+3.  Verifica que incluyan al menos un número con **Brecha (Gap) alta** (entre 13 y 20).
+4.  Asegúrate de que la **Super Balota** sea una de las "Calientes".
 
 ---
 *Nota: Este análisis aumenta tus probabilidades estadísticas basándose en datos históricos, pero el azar sigue siendo el factor determinante.*

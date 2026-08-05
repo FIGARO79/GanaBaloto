@@ -44,7 +44,7 @@ export default function Sugerencias({ sorteo, scoreMediana, scoreP75 }) {
 
   const getScoreBadge = (score) => {
     if (score >= scoreP75) {
-      return { text: '⭐ ADN Ganador Premium', class: 'text-success', style: { color: 'var(--accent-green)', fontWeight: 'bold' } };
+      return { text: '🧬 ADN Ganador JAX', class: 'text-success', style: { color: 'var(--accent-green)', fontWeight: 'bold' } };
     } else if (score >= scoreMediana) {
       return { text: '✔ Frecuente', class: 'text-blue', style: { color: 'var(--accent-blue)', fontWeight: 'bold' } };
     } else {
@@ -115,7 +115,7 @@ export default function Sugerencias({ sorteo, scoreMediana, scoreP75 }) {
                 <div className="sugerencia-card-container">
                   <div>
                     <span style={{ fontWeight: '700', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                      SUGERENCIA #{index + 1} {item.score >= scoreP75 && '🌟 (ADN Premium)'} {item.score >= scoreMediana && item.score < scoreP75 && '👍 (Frecuencia Media)'}
+                      SUGERENCIA #{index + 1} {index === 0 && '🏆 TOP RECOMENDACIÓN'} {composite >= 70 && index > 0 && '🌟 (Perfil Óptimo)'} {item.score >= scoreP75 && '🧬 (ADN Meta JAX)'}
                     </span>
                     <div className="balotas-container" style={{ margin: '10px 0 16px 0' }}>
                       {item.combinacion.map((num, i) => (

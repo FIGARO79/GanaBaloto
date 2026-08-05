@@ -1,54 +1,103 @@
-# 🎱 GanaBaloto - Análisis Estadístico y Predictivo (Baloto & Revancha)
+# 🎱 GanaBaloto - Análisis Estadístico y Predictivo Multimodelo (Baloto & Revancha)
 
-Este proyecto realiza un análisis estadístico avanzado de los sorteos históricos de **Baloto** y **Revancha** (Colombia) para generar combinaciones con mayor probabilidad estadística. Integra modelos de **Cadenas de Markov**, pruebas de aleatoriedad y computación paralela acelerada por hardware (CPU/GPU) mediante **JAX**.
+Este proyecto es una plataforma avanzada de análisis cuantitativo, modelado estocástico y simulación predictiva para los sorteos históricos de **Baloto** y **Revancha** (Colombia). 
+
+Combina **6 modelos estadísticos y estocásticos independientes** (Cadenas de Markov, Inferencia Bayesiana, Análisis de Hazard/Brechas, Entropía de Selección, Distribución Gaussiana y Computación Vectorizada JAX) para evaluar y proponer combinaciones con perfiles de probabilidad óptimos.
+
+Dispone tanto de un **sistema interactivo por línea de comandos (CLI)** como de una **aplicación web moderna (Flask + React)**.
 
 ---
 
 ## 🛠️ Stack Tecnológico
 
-El proyecto está construido sobre las siguientes tecnologías y librerías de Python:
-
-| Tecnología / Librería | Categoría | Propósito |
+| Componente | Tecnología | Propósito |
 | :--- | :--- | :--- |
-| **Python 3.10+** | Lenguaje Principal | Base lógica y ejecución del sistema. |
-| **JAX & jaxlib** | Computación de Alto Rendimiento | Aceleración matemática en paralelo con soporte para CPU y GPU CUDA 12. |
-| **Pandas** | Análisis de Datos | Manipulación, filtrado y modelado de las series históricas de sorteos. |
-| **SciPy** | Computación Científica | Pruebas estadísticas avanzadas (Chi-cuadrado, Runs Test, etc.). |
-| **JSON** | Almacenamiento de Datos | Lectura y actualización de la base de datos histórica ligera (`baloto.json`). |
-| **BeautifulSoup4 & Requests** | Extracción de Datos | Web scraping automatizado para obtener los últimos sorteos oficiales de la web de Baloto. |
-| **Tabulate** | Interfaz de Usuario | Formateo e impresión de tablas legibles en la interfaz de línea de comandos. |
-| **UV (Astral)** | Gestor de Paquetes | Motor de entorno ultrarrápido escrito en Rust para la instalación óptima de dependencias. |
+| **Core / Lógica** | **Python 3.10+** | Motor de cálculo, procesamiento estadístico y simulación. |
+| **Aceleración GPU/CPU** | **JAX & jaxlib** | Computación paralela acelerada por hardware con compilación `@jax.jit` para evaluar millones de combinaciones. |
+| **Procesamiento de Datos** | **Pandas & NumPy** | Manipulación de matrices, frecuencias históricas y series de tiempo. |
+| **Cálculo Científico** | **SciPy** | Pruebas de hipótesis (Chi-cuadrado, Runs Test de aleatoriedad, distribuciones). |
+| **Backend REST API** | **Flask & Flask-CORS** | Servidor web liviano para exponer los servicios de análisis y generación. |
+| **Frontend Web** | **React + Vite** | Interfaz web interactiva, moderna y dinámica con tableros y analítica en tiempo real. |
+| **Web Scraping** | **Requests & BeautifulSoup4** | Extracción automatizada de los últimos sorteos oficiales de Baloto. |
+| **Entorno & Paquetes** | **UV (Astral)** | Gestor de paquetes ultrarrápido escrito en Rust para instalación de dependencias aisladas. |
 
 ---
 
-## 📈 Metodología de Análisis Predictivo
+## 📊 Explicación Detallada de los Cálculos y Modelos
 
-GanaBaloto no genera jugadas al azar. Utiliza procesos estadísticos validados para proponer combinaciones con bases históricas coherentes:
+GanaBaloto integra un **Índice Compuesto Global (0 a 100 puntos)** que evalúa cada jugada combinando 6 dimensiones estadísticas:
 
-1. **Cadenas de Markov de Primer Orden:**
-   Analiza la secuencia histórica de sorteos para construir matrices de probabilidad de transición. Esto evalúa la probabilidad de que un número aparezca en función de los números que salieron en los sorteos inmediatamente anteriores.
+$$\text{Índice Compuesto} = 0.25 \cdot S_{\text{JAX}} + 0.20 \cdot M_{\text{Markov}} + 0.20 \cdot S_{\text{Gauss}} + 0.15 \cdot S_{\text{Bayes}} + 0.10 \cdot S_{\text{Hazard}} + 0.10 \cdot S_{\text{Entropía}}$$
 
-2. **Test Chi-Cuadrado de Bondad de Ajuste:**
-   Determina si la distribución de frecuencias de los números a lo largo del tiempo es verdaderamente uniforme o si presenta anomalías y desviaciones estadísticas significativas.
+### 1️⃣ Score JAX (ADN Histórico) – Peso: 25%
+* **Concepto:** Evalúa el peso y frecuencia acumulada histórica de los 5 números y la Super Balota.
+* **Fórmula / Cálculo:** Mide la suma ponderada de apariciones en sorteos pasados, optimizada en JAX. Se normaliza dividiendo entre un umbral de referencia:
+  $$\text{Norm}_{\text{JAX}} = \min\left(1.0, \frac{\text{Score JAX}}{0.20}\right)$$
+* **Interpretación:** Permite identificar si los números de la combinación pertenecen al núcleo de alta presencia histórica en sorteos premiados.
 
-3. **Prueba de Rachas (Runs Test) de Wald-Wolfowitz:**
-   Evalúa la hipótesis de aleatoriedad en la secuencia de sorteos para confirmar si las muestras históricas muestran independencia matemática.
+### 2️⃣ Modelos de Markov Combinados (Global + Posicional) – Peso: 20%
+* **Concepto:** Evalúa la probabilidad estocástica de transición entre sorteos consecutivos.
+* **Fórmula / Cálculo:** Promedia la probabilidad de transición secuencial global y la matriz de probabilidad de transición posicional ($P_1, P_2, P_3, P_4, P_5, SB$):
+  $$M_{\text{Markov}} = 0.5 \cdot \text{Norm}(P_{\text{Markov Global}}) + 0.5 \cdot \text{Norm}(P_{\text{Markov Posicional}})$$
+* **Interpretación:** Captura patrones de secuencia dependientes del sorteo inmediatamente anterior.
 
-4. **Score JAX (Métrica de Aptitud):**
-   Algoritmo vectorizado optimizado con `@jax.jit` que evalúa cada jugada propuesta contra todo el histórico de resultados en microsegundos, calculando la frecuencia ponderada de los números y superbalotas.
+### 3️⃣ Distribución Normal Gaussiana (Suma de Balotas) – Peso: 20%
+* **Concepto:** Mide qué tan cerca se encuentra la suma total de las 5 balotas principales del centro de la campana de Gauss histórica.
+* **Fórmula / Cálculo:** Evalúa la suma $S = \sum_{i=1}^5 b_i$ usando la función de densidad de probabilidad gaussiana ($\mu \approx 110, \sigma \approx 30$):
+  $$S_{\text{Gauss}} = \exp\left( -\frac{(S - \mu)^2}{2\sigma^2} \right)$$
+* **Interpretación:** Penaliza combinaciones con sumas extremas (muy bajas $< 60$ o muy altas $> 160$) y premia la "zona dorada" (~90 a 130).
+
+### 4️⃣ Inferencia Bayesiana Continuada (Bayes Score) – Peso: 15%
+* **Concepto:** Aplica probabilidades *a posteriori* utilizando una distribución a priori de Dirichlet / Suavizado Bayesiano.
+* **Fórmula / Cálculo:** Pondera la probabilidad esperada de cada balota dado el histórico total de sorteos:
+  $$S_{\text{Bayes}} = \frac{1}{K} \sum_{i=1}^K \frac{c_i + \alpha}{N + \alpha \cdot M}$$
+  donde $c_i$ es el conteo de la balota, $N$ el total de sorteos, y $\alpha$ el parámetro de suavizado.
+* **Interpretación:** Evita sesgos por muestras pequeñas y proporciona una estimación estable de probabilidad futura.
+
+### 5️⃣ Análisis de Brechas y Hazard Rate (Atraso/Madurez) – Peso: 10%
+* **Concepto:** Evalúa el número de sorteos transcurridos desde la última aparición de cada balota (Gap o Brecha).
+* **Fórmula / Cálculo:** Basado en la función de Hazard estocástica para medir la "presión de retorno" de balotas frías o maduras:
+  $$S_{\text{Hazard}} = 1 - (1 - \lambda)^{g}$$
+  donde $g$ es la brecha actual y $\lambda$ es la tasa constante de retorno esperada.
+* **Interpretación:** Identifica números con un atraso significativo que estadísticamente están en ciclo de retorno.
+
+### 6️⃣ Entropía de la Combinación (Dispersión y Aleatoriedad) – Peso: 10%
+* **Concepto:** Mide la dispersión espacial y uniformidad de los números para garantizar variabilidad natural.
+* **Fórmula / Cálculo:** Evalúa los intervalos entre números ordenados $d_i = b_{i+1} - b_i$ calculando la entropía normalizada de Shannon:
+  $$S_{\text{Entropía}} = -\sum p_i \log_2(p_i) / \log_2(K)$$
+* **Interpretación:** Penaliza combinaciones no aleatorias (como secuencias consecutivas `1, 2, 3` o agrupamientos apretados).
+
+---
+
+## 🏷️ Sistema de Distintivos e Insignias
+
+Para facilitar la interpretación visual en las sugerencias multimodelo:
+
+| Distintivo | Nombre | Significado |
+| :---: | :--- | :--- |
+| **🏆** | **Top #1 Recomendación** | Combinación con el **Índice Compuesto Global** más alto del ranking. |
+| **🌟** | **Perfil Óptimo (Excelente)** | Combinación con **Índice Compuesto $\ge 70.0/100$**, que supera holgadamente todos los filtros estadísticos. |
+| **🧬** | **ADN Ganador JAX** | Indica que el **Score JAX** de la jugada superó el promedio histórico real de los ganadores (`score_meta`). |
+
+---
+
+## ⚙️ Funcionalidades Adicionales
+
+1. **⚙️ Ruedas Combinatorias Reducidas (Wheeling System):**
+   Permite seleccionar entre 7 y 15 balotas favoritas y generar un conjunto reducido de tiquetes que garantiza matemáticamente condiciones de acierto (ej. 4 de 5 o 3 de 5) optimizando el presupuesto de juego.
+
+2. **🔍 Analizador Manual de Jugadas:**
+   Permite al usuario ingresar cualquier boleto de 5 números + Super Balota para recibir una auditoría instantánea con su *Índice Compuesto* y un veredicto cualitativo detallado punto por punto.
+
+3. **📊 Pruebas de Aleatoriedad y Chi-Cuadrado:**
+   Genera reportes de significancia estadística para confirmar si la serie histórica actual del Baloto o Revancha cumple con las propiedades de aleatoriedad esperadas.
 
 ---
 
 ## 🚀 Instalación y Configuración
 
-El proyecto cuenta con instaladores inteligentes para automatizar la configuración del entorno virtual.
-
-### Requisitos Previos
-* Tener instalado **Python 3.10** o superior.
-* Tener instalado **git** (opcional).
-
 ### 1️⃣ Instalación Automatizada
-El instalador crea un entorno virtual (`.venv`), instala el gestor de paquetes **UV** para máximo rendimiento y descarga las dependencias. Adicionalmente, detecta si posee una GPU NVIDIA en el sistema para instalar de forma predeterminada el soporte CUDA necesario para JAX.
+El instalador configura un entorno virtual `.venv`, instala **UV** para velocidad y descarga dependencias. Además, detecta automáticamente GPUs NVIDIA para habilitar aceleración CUDA en JAX.
 
 * **Linux / macOS:**
   ```bash
@@ -56,36 +105,31 @@ El instalador crea un entorno virtual (`.venv`), instala el gestor de paquetes *
   ./instalar.sh
   ```
 * **Windows:**
-  Haz doble clic en `instalar.bat` o ejecútalo desde la terminal de comandos:
   ```cmd
   instalar.bat
   ```
 
 ---
 
-## 💻 Instrucciones de Uso y Ejecución
+## 💻 Ejecución
 
-Una vez completado el paso de instalación, dispone de dos utilidades principales para su uso diario:
+### 1️⃣ Actualizar Resultados (Web Scraper)
+```bash
+./actualizar.sh       # Linux / macOS
+actualizar.bat        # Windows
+```
 
-### 1️⃣ Actualizar Base de Datos (Web Scraping)
-Descarga en tiempo real los últimos sorteos oficiales de la plataforma de Baloto y los añade al archivo histórico `baloto.json`.
+### 2️⃣ Ejecutar Motor en Consola (CLI)
+```bash
+./ejecutar_baloto.sh  # Linux / macOS
+ejecutar_baloto.bat   # Windows
+```
 
-* **Linux / macOS:**
-  ```bash
-  ./actualizar.sh
-  ```
-* **Windows:**
-  Ejecutar `actualizar.bat`
-
-### 2️⃣ Generar Análisis y Sugerencias de Jugadas
-Inicia el motor predictivo interactivo en consola, el cual cargará la base de datos histórica, inicializará el compilador JAX (utilizando CPU o GPU según disponibilidad) y presentará las sugerencias de juego.
-
-* **Linux / macOS:**
-  ```bash
-  ./ejecutar_baloto.sh
-  ```
-* **Windows:**
-  Ejecutar `ejecutar_baloto.bat`
+### 3️⃣ Ejecutar Aplicación Web (Flask + React)
+```bash
+./ejecutar_web.sh     # Linux / macOS
+```
+O accede manualmente iniciando `app.py` en backend y `npm run dev` en `frontend/`.
 
 ---
 
@@ -93,19 +137,20 @@ Inicia el motor predictivo interactivo en consola, el cual cargará la base de d
 
 ```
 GanaBaloto/
-├── .venv/                     # Entorno virtual con las librerías aisladas
-├── baloto.json                # Base de datos histórica (Estructura: "Baloto" y "Revancha")
-├── ganabaloto.py              # Script principal del motor predictivo y generación
-├── actualizar_resultados.py   # Script de web scraping para extracción de sorteos
-├── GUIA_ANALISIS.md           # Guía de usuario para la interpretación de estadísticas
-├── requirements.txt           # Definición de dependencias principales de Python
-├── instalar.sh / .bat         # Scripts de instalación e inicialización del entorno
-├── actualizar.sh / .bat       # Scripts de ejecución del web scraper
-└── ejecutar_baloto.sh / .bat  # Scripts de ejecución del software de análisis
+├── .venv/                     # Entorno virtual con dependencias aisladas
+├── baloto.json                # Base de datos histórica (Baloto y Revancha)
+├── ganabaloto.py              # Motor predictivo principal y CLI interactivo
+├── app.py                     # Backend REST API en Flask
+├── frontend/                  # Aplicación Frontend React + Vite
+├── actualizar_resultados.py   # Script de web scraping oficial
+├── GUIA_ANALISIS.md           # Guía de usuario e interpretación
+├── README.md                  # Documentación principal del proyecto
+├── requirements.txt           # Dependencias de Python
+└── *.sh / *.bat               # Lanzadores y utilidades de ejecución
 ```
 
 ---
 
 ## 🛡️ Descargo de Responsabilidad
 
-Este software es una herramienta didáctica y científica de análisis de datos históricos. Los juegos de azar como Baloto y Revancha son eventos estadísticamente independientes y aleatorios. El uso de este sistema no garantiza la obtención de premios ni ganancias financieras. Juegue con responsabilidad.
+Este software es una herramienta de análisis cuantitativo y exploración de datos históricos con fines educativos y de investigación. Los sorteos de Baloto y Revancha son eventos estadísticamente aleatorios e independientes. El uso de este software no garantiza premios ni beneficios financieros. Juegue con responsabilidad.
