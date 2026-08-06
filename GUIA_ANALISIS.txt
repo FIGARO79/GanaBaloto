@@ -2,65 +2,120 @@
           GUIA DE INTERPRETACION DE RESULTADOS - GANABALOTO
 ================================================================================
 
-Esta guia explica de forma sencilla cada calculo del script con ejemplos reales 
-para ayudarte a elegir tus numeros.
+Esta guia explica de forma sencilla y practica cada modelo estadistico, calculo e 
+insignia del motor GanaBaloto para ayudarte a evaluar y seleccionar tus 
+combinaciones de numeros (Baloto y Revancha).
 
 --------------------------------------------------------------------------------
-1. PROBABILIDAD TEORICA
+1. EL INDICE COMPUESTO GLOBAL (0 a 100 Puntos)
 --------------------------------------------------------------------------------
-* Que es: La probabilidad matematica pura de ganar antes de mirar cualquier dato.
-* El Numero: 1 en 15,401,568.
+GanaBaloto evalua cada combinacion mediante un Indice Compuesto Global 
+multidimensional de 0 a 100 puntos que integra 6 modelos estadisticos 
+independientes:
+
+Indice Compuesto = 0.25 * S_JAX + 0.20 * M_Markov + 0.20 * S_Gauss 
+                   + 0.15 * S_Bayes + 0.10 * S_Hazard + 0.10 * S_Entropia
 
 --------------------------------------------------------------------------------
-2. PRUEBA DE CHI-CUADRADO (Bondad de Ajuste)
+2. DESGLOSE DE LOS 6 MODELOS PREDICTIVOS
 --------------------------------------------------------------------------------
-* Que es: Nos dice si el sorteo es puramente al azar o si hay patrones.
-* p-value > 0.05: Azar puro.
-* p-value < 0.05: Patrones detectados (el modelo predictivo es muy util aqui).
+
+1. Score JAX (ADN Historico) – Peso: 25% (🧬)
+   * Que es: Califica la frecuencia e intensidad de aparicion acumulada 
+     historica de los 5 numeros y la Super Balota.
+   * Uso: Mide si la jugada comparte el perfil estadistico de las combinaciones 
+     premiadas en el pasado.
+   * Norm: Se normaliza con relacion al umbral historico promedio de ganadores 
+     reales (score_meta).
+
+2. Cadenas de Markov (Global y Posicional) – Peso: 20% (⛓️)
+   * Que es: Analiza la probabilidad estocastica de que un numero o secuencia 
+     "llame" a otros en sorteos consecutivos.
+   * Calculo: Combina la matriz de transicion secuencial global con la 
+     probabilidad de transicion por posicion especifica (P1...P5, SB).
+   * Ejemplo: Evalua con que frecuencia la aparicion del 43 en un sorteo atrae 
+     la salida del 1 en el siguiente.
+
+3. Distribucion Normal Gaussiana (Suma de Balotas) – Peso: 20% (🔔)
+   * Que es: Evalua si la suma total de las 5 balotas principales cae dentro 
+     de la curva de densidad normal historica (promedio approx 110, desv 30).
+   * Zona Dorada: Premia combinaciones con sumas entre 90 y 130. Penaliza 
+     combinaciones extremas (muy bajas < 60 o muy altas > 160).
+
+4. Inferencia Bayesiana Continuada (Bayes Score) – Peso: 15% (🎯)
+   * Que es: Aplica probabilidades a posteriori con suavizado de Dirichlet para 
+     estimar la probabilidad esperada de cada balota.
+   * Ventaja: Evita sesgos por muestras pequeñas y estabiliza la prediccion 
+     ante variaciones aleatorias.
+
+5. Analisis de Brechas y Hazard Rate (Atraso/Madurez) – Peso: 10% (⏳)
+   * Que es: Mide el numero de sorteos consecutivos transcurridos desde la ultima 
+     aparicion de cada balota (Gap).
+   * Interpretacion:
+     - NORMAL (6–12 sorteos): Ciclo habitual de rotacion.
+     - ALTA / MADURA (13–25 sorteos): ¡Numero Maduro! Mayor "presion de retorno" 
+       basada en la funcion de Hazard estocastica.
+
+6. Entropia de Shannon (Dispersion y Aleatoriedad) – Peso: 10% (🌀)
+   * Que es: Mide la dispersion espacial y uniformidad de los intervalos entre 
+     balotas.
+   * Objetivo: Penaliza jugadas poco aleatorias (secuencias consecutivas como 
+     1, 2, 3 o agrupaciones apretadas) y premia combinaciones con variabilidad.
 
 --------------------------------------------------------------------------------
-3. ADN DE GANADORES (Historico 5+1)
+3. PRUEBA DE CHI-CUADRADO Y ALEATORIEDAD (Runs Test)
 --------------------------------------------------------------------------------
-* Que es: El script analiza las combinaciones que YA GANARON en la vida real.
-* Uso: Calcula el Score JAX promedio de todos los ganadores historicos. 
-* Interpretacion: Si los ganadores historicos tienen un Score de 0.1450, cualquier 
-  combinacion nueva que alcance esa cifra tiene el mismo "peso estadistico" 
-  que un tiquete ganador del pasado.
+* Que es: Verifica estadisticamente si los resultados del sorteo se comportan 
+  como azar puro o si presentan desviaciones estructurales.
+* p-value > 0.05: Distribucion uniforme acorde al azar.
+* p-value < 0.05: Deteccion de sesgos o patrones aprovechables por los modelos.
 
 --------------------------------------------------------------------------------
-4. CADENAS DE MARKOV (Transiciones)
+4. SISTEMA DE DISTINTIVOS E INSIGNIAS (🏆 / 🌟 / 🧬)
 --------------------------------------------------------------------------------
-* Que es: Analiza si un numero "llama" a otro.
-* Ejemplo: Si despues del 43 suele salir el 1, esa transicion tiene una 
-  probabilidad alta (ej. 16%).
+
+- 🏆 Top #1 Recomendacion: 
+  Combinacion que obtuvo la maxima puntuacion en el Indice Compuesto Global del 
+  sorteo.
+
+- 🌟 Perfil Optimo (Excelente): 
+  Jugada con un Indice Compuesto >= 70.0/100, superando holgadamente todos los 
+  filtros estadisticos.
+
+- 🧬 ADN Ganador JAX: 
+  Indica que el Score JAX de la jugada alcanzo o supero el promedio historico 
+  real de los tiquetes ganadores pasados (score_meta).
 
 --------------------------------------------------------------------------------
-5. GAP ANALYSIS (Brecha de Inactividad)
+5. HERRAMIENTAS AVANZADAS DE ANALISIS Y APUESTAS
 --------------------------------------------------------------------------------
-* ¿Contra que se compara?: Contra el promedio teorico de 8.6 sorteos.
-* Interpretacion:
-    - NORMAL (6-12): Ciclo habitual.
-    - ALTA (13-25): ¡Numero Maduro! Estadisticamente esta "retrasado" 
-      y tiene mayor probabilidad de aparecer pronto.
+
+- 🔍 Analizador Manual de Jugadas:
+  Permite ingresar cualquier boleto personalizado (5 balotas + Super Balota) 
+  para obtener su Indice Compuesto Global (0 a 100) y un Veredicto Cualitativo 
+  instantaneo sobre sus fortalezas o advertencias.
+
+- ⚙️ Ruedas Combinatorias Reducidas (Wheeling System):
+  Permite elegir entre 7 y 15 de tus numeros preferidos para generar un conjunto 
+  reducido de tiquetes optimizados que garantiza aciertos matematicos (ej. 4 de 5 
+  o 3 de 5) minimizando el presupuesto de juego.
 
 --------------------------------------------------------------------------------
-6. PUNTAJE DE FRECUENCIA (Score JAX) y ESTRELLA (STAR)
+ESTRATEGIA MAESTRA SUGERIDA
 --------------------------------------------------------------------------------
-* Score JAX: Calificacion de 0 a 1 para la combinacion.
-* La Estrella (STAR): Si ves una estrella en la columna "ADN Ganador", 
-  significa que esa combinacion sugerida tiene un Score igual o superior 
-  al promedio de los ganadores reales del pasado.
-* Ejemplo: Si el promedio de ganadores es 0.145 y tu sugerencia tiene 0.1510, 
-  recibira una STAR (*).
+1. Prioriza el Perfil Global: Selecciona jugadas con el Trofeo (🏆) o distintivo 
+   Perfil Optimo 🌟 (>= 70/100).
+2. Exige el ADN Ganador: Elige combinaciones con la insignia ADN (🧬), 
+   asegurando que sus frecuencias compitan con los ganadores historicos.
+3. Verifica la Suma Gaussiana: Confirma que la suma de las 5 balotas principales 
+   este en la Zona Dorada (90 a 130).
+4. Combina Balotas Calientes y Maduras: Incluye 1 o 2 numeros con Brecha Alta 
+   (Gap entre 13 y 25) junto a numeros de alta frecuencia reciente.
+5. Optimiza tu Presupuesto: Usa las Ruedas Combinatorias si deseas jugar varios 
+   numeros con respaldo matematico.
 
 --------------------------------------------------------------------------------
-ESTRATEGIA MAESTRA
---------------------------------------------------------------------------------
-1. Busca combinaciones con la Estrella (STAR / *).
-2. Verifica que incluyan al menos un numero con Brecha (Gap) alta (entre 13 y 20).
-3. Asegurate de que la Super Balota sea una de las "Calientes".
-
---------------------------------------------------------------------------------
-Nota: Este analisis aumenta tus probabilidades estadisticas basandose en datos 
-historicos, pero el azar sigue siendo el factor determinante.
+Nota: Este sistema aplica analitica avanzada e inteligencia predictiva sobre 
+datos historicos para maximizar la eficiencia estadistica de tus tiquetes, pero 
+el azar sigue siendo un componente fundamental.
 ================================================================================
