@@ -2,6 +2,7 @@
 name: baloto-analisis-predictivo
 description: >-
   Use this skill when the user wants to analyze, evaluate, audit, or generate lottery combinations for Baloto and Revancha using the 6-dimension stochastic statistical engine (Score JAX, Markov chains, Gaussian sum, Bayesian Dirichlet, Hazard rate gaps, Shannon entropy), or when calculating reduced wheeling systems (ruedas combinatorias) with mathematical hit guarantees.
+  Palabras activadoras: PRONOSTICO, JUGADAS, GANABALOTO.
 ---
 
 # Análisis Predictivo y Generación de Jugadas (Baloto & Revancha)
@@ -13,9 +14,35 @@ Para profundizar en la formulación matemática de los 6 modelos estocásticos, 
 
 ---
 
+## ⚡ Palabra Activadora Rápida (Trigger)
+
+Cuando el usuario ingrese la palabra activadora:
+* **`PRONOSTICO`** (o sus alias **`JUGADAS`**, **`GANABALOTO`**)
+
+El agente debe ejecutar de inmediato el flujo de pronóstico completo estandarizado y presentar el reporte estructurado en 4 secciones sin necesidad de requerir prompts adicionales.
+
+---
+
 ## Capacidades y Flujos de Trabajo
 
-### 1. Diagnóstico y Auditoría de una Jugada Manual
+### 1. Pronóstico Completo Estandarizado (Flujo Principal)
+Ejecuta el script integral que calcula candidatos optimizados por JAX, filtra distintivos (🌟 Perfil Óptimo $\ge 70$, 🧬 ADN Ganador), audita las jugadas #1 y genera la rueda reducida con garantía de aciertos.
+
+**Comando:**
+```bash
+./.venv/bin/python .agents/skills/baloto-analisis-predictivo/scripts/ejecutar_pronostico_completo.py
+```
+
+**Estructura del Reporte de Salida:**
+1. **Cabecera de Entorno:** Motor estocástico (JAX / GPU detectada) y dataset analizado (`baloto.json`).
+2. **🎱 1. Pronósticos Recomendados: Baloto:** Tabla Markdown con Top 5 jugadas (`#`, `Combinación`, `Suma`, `Índice`, `JAX`, `Gauss`, `Entropía`, `Bayes`, `Hazard`, `Insignias`).
+3. **🎱 2. Pronósticos Recomendados: Revancha:** Tabla Markdown con Top 5 jugadas bajo el mismo formato y leyenda de insignias.
+4. **🔬 3. Auditoría Detallada de las Jugadas Estrella:** Diagnóstico cualitativo de las jugadas Top #1 de Baloto y Revancha (Suma/Gauss, Entropía, JAX vs Meta histórica, SB y Hazard rate).
+5. **🛡️ 4. Estrategia Avanzada: Rueda Combinatoria Reducida (Wheeling System):** Bloque de 7 números clave cruzados con 2 Super Balotas líderes con garantía matemática de 3 aciertos (10 tiquetes optimizados).
+
+---
+
+### 2. Diagnóstico y Auditoría de una Jugada Manual
 Evalúa cualquier boleto de 5 balotas principales (1-43) y 1 Super Balota (1-16) contra el histórico completo y los 6 modelos predictivos.
 
 **Comando:**
@@ -34,8 +61,8 @@ Evalúa cualquier boleto de 5 balotas principales (1-43) y 1 Super Balota (1-16)
 
 ---
 
-### 2. Generación Automática de Jugadas Recomendadas
-Genera un lote de combinaciones candidatas con la máxima eficiencia estadística, aplicando filtros de calidad.
+### 3. Generación Personalizada de Jugadas
+Genera un lote específico de combinaciones candidatas con parámetros personalizados de filtrado.
 
 **Comandos habituales:**
 
@@ -54,13 +81,10 @@ Genera un lote de combinaciones candidatas con la máxima eficiencia estadístic
   ./.venv/bin/python .agents/skills/baloto-analisis-predictivo/scripts/generar_recomendadas.py --sorteo Ambos --cantidad 5 --solo-adn
   ```
 
-* **Modo JSON:**
-  Agrega `--json` para obtener el resultado estructurado.
-
 ---
 
-### 3. Ruedas Combinatorias Reducidas (Wheeling System)
-Permite al usuario seleccionar entre 5 y 12 números favoritos y generar un conjunto reducido de tiquetes optimizados que garantiza matemáticamente 3 o 4 aciertos (si los números ganadores están dentro de la selección).
+### 4. Ruedas Combinatorias Reducidas Personalizadas
+Permite al usuario seleccionar entre 5 y 12 números favoritos y generar un conjunto reducido de tiquetes optimizados que garantiza matemáticamente 3 o 4 aciertos.
 
 **Comandos:**
 
