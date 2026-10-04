@@ -61,6 +61,10 @@ def obtener_todos_los_resultados():
             if "Baloto" not in heading.text or not heading.find("time"):
                 continue
 
+            # Extraer Número de Sorteo
+            match_sorteo = re.search(r"Resultado Baloto (\d+)", heading.text, re.IGNORECASE)
+            sorteo_num = int(match_sorteo.group(1)) if match_sorteo else None
+
             # Extraer Fecha
             time_tag = heading.find("time")
             if time_tag and time_tag.get("datetime"):
@@ -116,6 +120,7 @@ def obtener_todos_los_resultados():
 
             es_ultimo = len(resultados_lista) == 0
             res = {
+                "Sorteo": sorteo_num,
                 "Fecha": fecha_str,
                 "Baloto": {
                     "numeros": baloto_nums,
@@ -161,6 +166,7 @@ def actualizar_json(lista_resultados):
                 if fecha_dt.date() not in fechas_existentes:
                     nums = item[tipo]["numeros"]
                     nueva_fila = {
+                        "Sorteo": int(item["Sorteo"]) if item.get("Sorteo") is not None else None,
                         "Fecha": fecha_dt.strftime("%Y-%m-%d"),
                         "B1": int(nums[0]),
                         "B2": int(nums[1]),
@@ -172,7 +178,7 @@ def actualizar_json(lista_resultados):
                         "Premios 5+0": int(item[tipo]["p50"]),
                     }
                     nuevas_filas.append(nueva_fila)
-                    print(f"[+] Añadiendo {tipo} del {item['Fecha']}")
+                    print(f"[+] Añadiendo {tipo} del {item['Fecha']} (Sorteo #{item.get('Sorteo')})")
 
             if nuevas_filas:
                 df_nuevas = pd.DataFrame(nuevas_filas)
@@ -182,6 +188,7 @@ def actualizar_json(lista_resultados):
 
                 df_final["Fecha"] = df_final["Fecha"].dt.strftime("%Y-%m-%d")
                 for col in [
+                    "Sorteo",
                     "B1",
                     "B2",
                     "B3",
@@ -191,7 +198,8 @@ def actualizar_json(lista_resultados):
                     "Premios 5+1",
                     "Premios 5+0",
                 ]:
-                    df_final[col] = df_final[col].astype(int)
+                    if col in df_final.columns and not df_final[col].isnull().all():
+                        df_final[col] = df_final[col].fillna(0).astype(int)
 
                 dict_hojas[tipo] = df_final.to_dict(orient="records")
                 cambios = True
