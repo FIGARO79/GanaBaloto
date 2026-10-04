@@ -1,6 +1,6 @@
 # 🎱 Análisis Estadístico, Numérico y Probabilístico: Botes Ganadores de Baloto
 
-Este documento consolida el estudio analítico profundo de los **22 sorteos históricos donde cayó el premio mayor (acumulado 5+1)** en la modalidad principal de **Baloto** desde la adopción del formato actual (matriz 5 de 43 + Super Balota de 16), identificando patrones numéricos, coincidencias con el calendario, ráfagas de botes cercanos y su evaluación con el motor estocástico JAX.
+Este documento consolida el estudio analítico profundo de los **23 sorteos históricos donde cayó el premio mayor (acumulado 5+1)** en la modalidad principal de **Baloto** desde la adopción del formato actual (matriz 5 de 43 + Super Balota de 16), identificando patrones numéricos, coincidencias con el calendario, ráfagas de botes cercanos y su evaluación con el motor estocástico JAX.
 
 ---
 
@@ -30,6 +30,7 @@ Este documento consolida el estudio analítico profundo de los **22 sorteos hist
 | **20** | 2025-04-30 | `05 - 12 - 17 - 19 - 22` | **16** | 75 | 4B / 1A | 2P / 3I | $140.000.000 |
 | **21** | 2025-05-31 | `02 - 08 - 16 - 28 - 31` | **15** | 85 | 3B / 2A | 4P / 1I | $8.000.000.000 |
 | **22** | 2025-11-08 | `10 - 12 - 23 - 31 - 37` | **10** | 113 | 2B / 3A | 2P / 3I | $290.000.000 |
+| **23** | 2026-10-03 | `03 - 10 - 14 - 26 - 31` | **10** | 84 | 3B / 2A | 3P / 2I | $61.600.000.000 |
 
 ---
 

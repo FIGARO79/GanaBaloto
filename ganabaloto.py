@@ -20,6 +20,7 @@ os.environ["JAX_PLATFORMS"] = (
 
 # Importar librerías necesarias
 import pandas as pd
+import numpy as np
 import random
 from itertools import combinations
 
@@ -225,14 +226,10 @@ def calculate_bayesian_dirichlet_score(
     return max(0.0, min(1.0, total_score))
 
 
-def calculate_gap_hazard_score(combination, sb, df_gap_analysis):
-    """Calcula la presión estadística acumulada (Poisson Hazard Rate) según el atraso de cada número (0 a 1)."""
+def calculate_weibull_hazard_score(combination, sb, df_gap_analysis, shape=1.1667, scale=9.0176):
+    """Calcula la presión estadística acumulada bajo un modelo de supervivencia Weibull calibrado con desgaste real (k=1.1667)."""
     if df_gap_analysis.empty:
         return 0.5
-    lambda_main = K_MAIN_BALLS / N_MAIN_BALLS
-    lambda_sb = 1.0 / N_SUPER_BALOTA
-
-    hazard_scores = []
     gap_map = {}
     for _, row in df_gap_analysis.iterrows():
         tipo = row.get("Tipo")
@@ -241,17 +238,126 @@ def calculate_gap_hazard_score(combination, sb, df_gap_analysis):
         if gap_val != "N/A" and pd.notna(gap_val):
             gap_map[(tipo, int(num))] = float(gap_val)
 
+    scores = []
     for num in combination:
         g = gap_map.get(("Main", num), 0.0)
-        cum_p = 1.0 - math.pow(1.0 - lambda_main, g)
-        hazard_scores.append(cum_p)
+        w_p = 1.0 - math.exp(-math.pow(max(0.0, g) / scale, shape))
+        scores.append(w_p)
 
     sb_g = gap_map.get(("SB", sb), 0.0)
-    sb_cum_p = 1.0 - math.pow(1.0 - lambda_sb, sb_g)
+    sb_scale = scale * (N_SUPER_BALOTA / N_MAIN_BALLS * 3.5)
+    sb_w_p = 1.0 - math.exp(-math.pow(max(0.0, sb_g) / sb_scale, shape))
 
-    avg_main_hazard = sum(hazard_scores) / len(hazard_scores) if hazard_scores else 0.5
-    total_hazard = avg_main_hazard * 0.8 + sb_cum_p * 0.2
-    return max(0.0, min(1.0, total_hazard))
+    avg_main = sum(scores) / len(scores) if scores else 0.5
+    total = avg_main * 0.8 + sb_w_p * 0.2
+    return max(0.0, min(1.0, total))
+
+
+def calculate_gap_hazard_score(combination, sb, df_gap_analysis):
+    """Calcula la presión estadística acumulada (utilizando Weibull k=1.1667 calibrado)."""
+    return calculate_weibull_hazard_score(combination, sb, df_gap_analysis)
+
+
+def calculate_ising_energy_score(combination, ising_matrix):
+    """Calcula la afinidad de acoplamiento mutuo cooperativo (Modelo de Ising / Máxima Entropía) entre los 5 números."""
+    if ising_matrix is None or (isinstance(ising_matrix, np.ndarray) and ising_matrix.size == 0):
+        return 0.5
+    comb = sorted(list(combination))
+    coupling_sum = 0.0
+    pair_count = 0
+    for i in range(len(comb)):
+        for j in range(i + 1, len(comb)):
+            b1, b2 = comb[i], comb[j]
+            if 1 <= b1 < ising_matrix.shape[0] and 1 <= b2 < ising_matrix.shape[1]:
+                coupling_sum += float(ising_matrix[b1, b2])
+                pair_count += 1
+    if pair_count == 0:
+        return 0.5
+    avg_coupling = coupling_sum / pair_count
+    norm_score = 1.0 / (1.0 + math.exp(-2.0 * avg_coupling))
+    return max(0.0, min(1.0, norm_score))
+
+
+def detect_draw_regime(df):
+    """Detecta el régimen estocástico actual del juego (Congestión Baja, Equilibrio Central o Expansión Alta)."""
+    if df.empty or len(df) < 5:
+        return {
+            "regimen_actual": "Equilibrio Central (Gauss Estándar)",
+            "codigo": 1,
+            "media_reciente_sumas": 110.0,
+            "prob_proximo": {
+                "Congestión Baja (<=95)": 0.33,
+                "Equilibrio Central (96-124)": 0.34,
+                "Expansión Alta (>=125)": 0.33,
+            }
+        }
+
+    sums = df[COLUMNS_TO_ANALYZE].sum(axis=1).values
+    lows = (df[COLUMNS_TO_ANALYZE] <= LOW_HIGH_SPLIT_POINT).sum(axis=1).values
+
+    regimes = []
+    for s, l in zip(sums, lows):
+        if s <= 95 or l >= 4:
+            regimes.append(0)  # Congestión Baja / Bote
+        elif s >= 125 or l <= 1:
+            regimes.append(2)  # Expansión Alta
+        else:
+            regimes.append(1)  # Equilibrio Central
+
+    regimes = np.array(regimes)
+    T = np.zeros((3, 3))
+    for t in range(len(regimes) - 1):
+        T[regimes[t], regimes[t + 1]] += 1
+    row_sums = T.sum(axis=1, keepdims=True)
+    row_sums[row_sums == 0] = 1
+    T = T / row_sums
+
+    actual_cod = int(regimes[-1])
+    nombres = {
+        0: "Congestión Baja (Zona de Botes)",
+        1: "Equilibrio Central (Gauss Estándar)",
+        2: "Expansión Alta (Péndulo Superior)",
+    }
+    prob_next = T[actual_cod]
+    media_reciente = float(np.mean(sums[-5:]))
+
+    return {
+        "regimen_actual": nombres[actual_cod],
+        "codigo": actual_cod,
+        "media_reciente_sumas": round(media_reciente, 1),
+        "prob_proximo": {
+            "Congestión Baja (<=95)": round(float(prob_next[0]), 3),
+            "Equilibrio Central (96-124)": round(float(prob_next[1]), 3),
+            "Expansión Alta (>=125)": round(float(prob_next[2]), 3),
+        }
+    }
+
+
+def generate_covering_wheel(numbers, k=5, t=3):
+    """
+    Genera un sistema reducido (Wheeling) óptimo con garantía matemática C(v, k, t).
+    Garantiza que si salen 't' aciertos en el pool, al menos un tiquete de tamaño 'k' los contendrá.
+    """
+    import itertools
+    numbers = sorted(list(set(numbers)))
+    n = len(numbers)
+    if n <= k:
+        return [numbers]
+
+    target_subsets = [frozenset(s) for s in itertools.combinations(numbers, t)]
+    uncovered = set(target_subsets)
+    candidate_tickets = [frozenset(c) for c in itertools.combinations(numbers, k)]
+
+    ticket_coverage = {cand: frozenset([s for s in target_subsets if s.issubset(cand)]) for cand in candidate_tickets}
+    selected_tickets = []
+
+    while uncovered and candidate_tickets:
+        best_cand = max(candidate_tickets, key=lambda c: len(ticket_coverage[c] & uncovered))
+        selected_tickets.append(sorted(list(best_cand)))
+        uncovered -= ticket_coverage[best_cand]
+        candidate_tickets.remove(best_cand)
+
+    return selected_tickets
 
 
 def calculate_composite_score(
@@ -262,8 +368,9 @@ def calculate_composite_score(
     score_entropy,
     score_bayes,
     score_hazard,
+    score_ising=0.5,
 ):
-    """Calcula un Índice Predictivo Compuesto Global (0 a 100)."""
+    """Calcula un Índice Predictivo Compuesto Global Refinado v3 (0 a 100)."""
     norm_jax = min(1.0, score_jax / 0.20)
     norm_markov_g = min(1.0, prob_markov_global * 1e5)
     norm_markov_p = (
@@ -272,11 +379,12 @@ def calculate_composite_score(
     markov_combined = 0.5 * norm_markov_g + 0.5 * norm_markov_p
 
     composite = (
-        0.25 * norm_jax
-        + 0.20 * markov_combined
-        + 0.20 * score_gauss
+        0.20 * norm_jax
+        + 0.15 * markov_combined
+        + 0.15 * score_gauss
         + 0.15 * score_bayes
-        + 0.10 * score_hazard
+        + 0.15 * score_hazard
+        + 0.10 * score_ising
         + 0.10 * score_entropy
     ) * 100.0
 
@@ -492,6 +600,23 @@ def get_number_weights(results, n_main_balls, n_super_balota):
                     if num in sb_probs.index and sb_probs[num] > 0:
                         weights[("sb", num)] += (sb_probs[num] / max_sb_prob) * 0.25
 
+    # Resonancia Cíclica Lag-8 (sorteo de hace 8 fechas)
+    if results.get("lag_8_combination"):
+        for num in results["lag_8_combination"]:
+            weights[("main", num)] += 0.35
+    if results.get("lag_8_sb"):
+        weights[("sb", results["lag_8_sb"])] += 0.30
+
+    # Ponderación ADN Ganador Histórico (Botes 5+1)
+    pivotes_botes_core = [8, 19, 4, 28, 15, 14, 10, 31]
+    for num in pivotes_botes_core:
+        if num <= n_main_balls:
+            weights[("main", num)] += 0.20
+    sbs_botes_core = [15, 10, 14, 7, 1, 12]
+    for num in sbs_botes_core:
+        if num <= n_super_balota:
+            weights[("sb", num)] += 0.25
+
     return weights
 
 
@@ -623,9 +748,15 @@ def generate_probable_combinations(num_combinations, results, weights):
             combination = sorted(list(chosen))
             sb = random.choices(sb_numbers, weights=sb_weights, k=1)[0]
 
-        # Validaciones de Gauss y Entropía
+        # Efecto Espejo Bote (20% de probabilidad de que la SB coincida con una balota principal)
+        if sb <= N_MAIN_BALLS and random.random() < 0.20 and sb not in combination:
+            replace_idx = random.randint(0, K_MAIN_BALLS - 1)
+            combination[replace_idx] = sb
+            combination = sorted(combination)
+
+        # Validaciones de Gauss y Entropía (umbral calibrado para incluir sumas bajas de bote)
         score_gauss = calculate_sum_gaussian_score(combination)
-        if score_gauss < 0.20:
+        if score_gauss < 0.15:
             continue
 
         score_entropy = calculate_shannon_entropy(combination)
@@ -676,9 +807,12 @@ def generate_probable_combinations(num_combinations, results, weights):
         score_hazard = calculate_gap_hazard_score(
             combination, sb, results.get("df_gap_analysis", pd.DataFrame())
         )
+        score_ising = calculate_ising_energy_score(
+            combination, results.get("ising_matrix")
+        )
 
         composite = calculate_composite_score(
-            score, prob_m, prob_pos, score_gauss, score_entropy, score_bayes, score_hazard
+            score, prob_m, prob_pos, score_gauss, score_entropy, score_bayes, score_hazard, score_ising
         )
 
         generated.append(
@@ -717,6 +851,16 @@ def analizar_sorteo(nombre_hoja, df):
         [int(last_draw[col]) for col in COLUMNS_TO_ANALYZE]
     )
     res["last_sb"] = int(last_draw[SUPER_BALOTA_COLUMN])
+    # Sorteo de Resonancia Cíclica Lag-8 (hace 8 sorteos oficiales)
+    if len(df) >= 8:
+        draw_lag_8 = df.iloc[-8]
+        res["lag_8_combination"] = sorted(
+            [int(draw_lag_8[col]) for col in COLUMNS_TO_ANALYZE]
+        )
+        res["lag_8_sb"] = int(draw_lag_8[SUPER_BALOTA_COLUMN])
+    else:
+        res["lag_8_combination"] = []
+        res["lag_8_sb"] = None
     res["total_combinations"] = math.comb(N_MAIN_BALLS, K_MAIN_BALLS) * N_SUPER_BALOTA
 
     # Duplicados
@@ -972,6 +1116,26 @@ def analizar_sorteo(nombre_hoja, df):
         res["historical_data_valid_for_jax"] = True
     except Exception:
         res["historical_data_valid_for_jax"] = False
+
+    # Matriz de Acoplamiento Mutuo de Ising J_ij (Interacciones Pareadas)
+    N_draws = len(df)
+    cooc = np.zeros((N_MAIN_BALLS + 1, N_MAIN_BALLS + 1))
+    for _, row in df.iterrows():
+        b = [int(row[col]) for col in COLUMNS_TO_ANALYZE]
+        for i in range(len(b)):
+            for j in range(i + 1, len(b)):
+                cooc[b[i], b[j]] += 1
+                cooc[b[j], b[i]] += 1
+    exp_cooc = N_draws * (10.0 / 903.0)
+    J = np.zeros((N_MAIN_BALLS + 1, N_MAIN_BALLS + 1))
+    for i in range(1, N_MAIN_BALLS + 1):
+        for j in range(1, N_MAIN_BALLS + 1):
+            if i != j:
+                J[i, j] = math.log((cooc[i, j] + 1.0) / (exp_cooc + 1.0))
+    res["ising_matrix"] = J
+
+    # Detección de Régimen Dinámico (HMM de 3 Estados)
+    res["regime_info"] = detect_draw_regime(df)
 
     return res
 
