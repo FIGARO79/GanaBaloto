@@ -111,3 +111,8 @@ Para comprobar que el motor predictivo y JAX funcionan adecuadamente:
 ./.venv/bin/python -c "import ganabaloto as gb; print('JAX Activo:', gb.HAS_JAX)"
 ```
 Si detecta GPU NVIDIA, aprovechará aceleración por hardware; de lo contrario, conmutará fluidamente a CPU.
+
+Para ejecutar la suite completa de pruebas unitarias e integración del motor modular (`pronostico`):
+```bash
+./.venv/bin/python .agents/skills/baloto-analisis-predictivo/tests/run_tests.py
+```

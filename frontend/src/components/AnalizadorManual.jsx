@@ -10,7 +10,7 @@ const formatProb = (val) => {
   return num.toFixed(6);
 };
 
-export default function AnalizadorManual({ sorteo, scoreMediana, scoreP75, posTopData }) {
+export default function AnalizadorManual({ sorteo, scoreMediana, scoreP75, scoreMeta = 0.1495 }) {
   const [numeros, setNumeros] = useState(['', '', '', '', '']);
   const [sb, setSb] = useState('');
   const [analisis, setAnalisis] = useState(null);
@@ -68,39 +68,19 @@ export default function AnalizadorManual({ sorteo, scoreMediana, scoreP75, posTo
     }
   };
 
-  const getScoreInterpretation = (score) => {
-    if (score >= scoreP75) {
-      return {
-        text: 'Excelente (ADN Ganador Premium). Tus números tienen una frecuencia acumulada excepcionalmente alta en el histórico de ganadores.',
-        color: 'var(--accent-green)'
-      };
-    } else if (score >= scoreMediana) {
-      return {
-        text: 'Frecuente. Tus números están en el rango promedio de las combinaciones que suelen salir premiadas.',
-        color: 'var(--accent-blue)'
-      };
-    } else {
-      return {
-        text: 'Bajo el promedio. Juegas con combinaciones de balotas menos comunes o frías en el historial.',
-        color: 'var(--text-muted)'
-      };
-    }
-  };
-
   return (
     <div>
-      {/* Formulario e informe de análisis manual */}
       <div className="card">
-        <h3 className="card-title">Evalúa tu jugada favorita</h3>
+        <h3 className="card-title">Auditoría Estocástica en 7 Dimensiones: {sorteo}</h3>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', margin: '0 0 20px 0' }}>
-          Ingresa los números que tienes en mente para analizar si se alinean con los patrones matemáticos del historial de la lotería.
+          Ingresa 5 balotas principales y la Super Balota para auditar su calidad estructural mediante física estadística (Weibull, Ising, Gauss, Entropía y JAX).
         </p>
 
         <form onSubmit={analizarJugada} className="analizador-form">
-          <div className="inputs-row">
+          <div className="inputs-row" style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '20px' }}>
             {numeros.map((num, i) => (
-              <div key={i} className="input-field">
-                <label>B{i+1}</label>
+              <div key={i} className="input-field" style={{ textAlign: 'center' }}>
+                <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 'bold' }}>B{i+1}</label>
                 <input
                   type="number"
                   min="1"
@@ -109,12 +89,13 @@ export default function AnalizadorManual({ sorteo, scoreMediana, scoreP75, posTo
                   value={num}
                   onChange={(e) => handleNumChange(i, e.target.value)}
                   className="num-input"
+                  style={{ width: '56px', height: '56px', fontSize: '1.2rem', textAlign: 'center', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.03)', color: 'var(--text-primary)', fontWeight: 'bold' }}
                   required
                 />
               </div>
             ))}
-            <div className="input-field">
-              <label style={{ color: 'var(--accent-yellow)' }}>Super Balota</label>
+            <div className="input-field" style={{ textAlign: 'center' }}>
+              <label style={{ fontSize: '0.8rem', color: 'var(--accent-yellow)', fontWeight: 'bold' }}>Super Balota</label>
               <input
                 type="number"
                 min="1"
@@ -123,182 +104,164 @@ export default function AnalizadorManual({ sorteo, scoreMediana, scoreP75, posTo
                 value={sb}
                 onChange={(e) => handleSbChange(e.target.value)}
                 className="num-input num-input-sb"
+                style={{ width: '56px', height: '56px', fontSize: '1.2rem', textAlign: 'center', borderRadius: '12px', border: '2px solid var(--accent-yellow)', background: 'rgba(234, 179, 8, 0.08)', color: 'var(--accent-yellow)', fontWeight: 'bold' }}
                 required
               />
             </div>
           </div>
 
           {hasDuplicates && (
-            <div className="alert alert-error" style={{ margin: '0' }}>
-              <span>❌ Error: No puedes ingresar números repetidos en las balotas principales.</span>
+            <div className="alert alert-error" style={{ marginBottom: '16px' }}>
+              <span>Error: No puedes ingresar números repetidos en las balotas principales.</span>
             </div>
           )}
 
           {outOfRangeMain && (
-            <div className="alert alert-error" style={{ margin: '0' }}>
-              <span>❌ Error: Las balotas principales deben estar entre 1 y 43.</span>
+            <div className="alert alert-error" style={{ marginBottom: '16px' }}>
+              <span>Error: Las balotas principales deben estar entre 1 y 43.</span>
             </div>
           )}
 
           {outOfRangeSb && (
-            <div className="alert alert-error" style={{ margin: '0' }}>
-              <span>❌ Error: La Super Balota debe estar entre 1 y 16.</span>
+            <div className="alert alert-error" style={{ marginBottom: '16px' }}>
+              <span>Error: La Super Balota debe estar entre 1 y 16.</span>
             </div>
           )}
 
           <button
             type="submit"
-            className="btn btn-secondary"
+            className="btn btn-primary"
             disabled={loading || hasEmptyFields || hasDuplicates || outOfRangeMain || outOfRangeSb}
-            style={{ width: '100%', background: 'rgba(255,255,255,0.03)', borderColor: 'var(--border-color)' }}
+            style={{ width: '100%', padding: '14px', fontSize: '1rem', fontWeight: 'bold' }}
           >
-            {loading ? 'Analizando...' : '📊 Analizar Mi Jugada'}
+            {loading ? 'Calculando tensores en JAX...' : 'Auditar Combinación con Motor Cuantitativo'}
           </button>
         </form>
 
         {error && (
           <div className="alert alert-error" style={{ marginTop: '20px' }}>
-            <span>❌ Error: {error}</span>
+            <span>Error: {error}</span>
           </div>
         )}
       </div>
 
       {analisis && !loading && (
         <div className="card" style={{ marginTop: '24px' }}>
-          <h3 className="card-title">Diagnóstico de tu jugada:</h3>
+          <h3 className="card-title">Resultado de la Auditoría Cuantitativa:</h3>
           
-          <div className="balotas-container">
+          <div className="balotas-container" style={{ margin: '16px 0' }}>
             {analisis.combinacion.map((num, i) => (
               <div key={i} className="balota balota-principal">
-                <div className="balota-inner">{num}</div>
+                <div className="balota-inner">{num < 10 ? `0${num}` : num}</div>
               </div>
             ))}
             <div className="balota-separator">+</div>
             <div className="balota balota-super">
-              <div className="balota-inner">{analisis.sb}</div>
+              <div className="balota-inner">{analisis.sb < 10 ? `0${analisis.sb}` : analisis.sb}</div>
             </div>
           </div>
 
-          {/* Caja de Veredicto Cualitativo Sencillo */}
+          {/* Veredicto Cualitativo Oficial */}
           {analisis.veredicto && (
-            <div className="alert alert-info" style={{ marginTop: '20px', background: (analisis.composite || 50) >= 60 ? 'rgba(34, 197, 94, 0.08)' : 'rgba(59, 130, 246, 0.08)', borderColor: (analisis.composite || 50) >= 60 ? 'var(--accent-green)' : 'var(--accent-blue)' }}>
-              <div style={{ fontWeight: 'bold', fontSize: '1rem', marginBottom: '8px' }}>
+            <div className="alert alert-info" style={{
+              margin: '20px 0',
+              background: (analisis.composite || 50) >= 70 ? 'rgba(34, 197, 94, 0.08)' : (analisis.composite || 50) >= 55 ? 'rgba(59, 130, 246, 0.08)' : 'rgba(239, 68, 68, 0.08)',
+              borderColor: (analisis.composite || 50) >= 70 ? 'var(--accent-green)' : (analisis.composite || 50) >= 55 ? 'var(--accent-blue)' : 'var(--accent-red)'
+            }}>
+              <div style={{ fontWeight: '800', fontSize: '1.05rem', marginBottom: '10px' }}>
                 {analisis.veredicto[0]}
               </div>
-              <ul style={{ margin: '8px 0', paddingLeft: '20px', fontSize: '0.9rem', lineHeight: '1.6' }}>
+              <ul style={{ margin: '8px 0', paddingLeft: '20px', fontSize: '0.9rem', lineHeight: '1.7' }}>
                 {analisis.veredicto.slice(2, -1).map((line, idx) => (
                   <li key={idx}>{line.replace(/^  • /, '')}</li>
                 ))}
               </ul>
-              <div style={{ marginTop: '10px', fontWeight: 'bold', color: 'var(--text-primary)', fontSize: '0.9rem' }}>
+              <div style={{ marginTop: '12px', fontWeight: 'bold', color: 'var(--text-primary)', fontSize: '0.95rem' }}>
                 {analisis.veredicto[analisis.veredicto.length - 1]}
               </div>
             </div>
           )}
 
-          <div className="grid-3" style={{ marginTop: '24px', gap: '16px' }}>
-            <div className="card" style={{ margin: 0, background: 'rgba(255, 255, 255, 0.02)', gridColumn: 'span 3' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 'bold' }}>Índice Compuesto Global</div>
-                  <div style={{ fontSize: '2rem', fontWeight: '800', margin: '4px 0', color: (analisis.composite || 50) >= 60 ? 'var(--accent-green)' : 'var(--accent-blue)' }}>{(analisis.composite || 50).toFixed(1)} / 100</div>
+          {/* Resumen Central del Índice Compuesto */}
+          <div style={{ background: 'var(--bg-card-subtle)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-color)', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
+              <div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 'bold' }}>Índice Compuesto Global</div>
+                <div style={{ fontSize: '2.5rem', fontWeight: '800', margin: '4px 0', color: (analisis.composite || 50) >= 70 ? 'var(--accent-green)' : (analisis.composite || 50) >= 55 ? 'var(--accent-blue)' : 'var(--accent-yellow)' }}>
+                  {(analisis.composite || 50).toFixed(1)} / 100
                 </div>
-                <div style={{ maxWidth: '400px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                  Evaluación ponderada en 6 dimensiones: Frecuencia JAX, Transiciones de Markov, Distribución Gaussiana, Entropía de Shannon, Posterior Bayesiano y Presión Hazard de Atraso.
-                </div>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Suma Total: <strong>{analisis.suma}</strong></span>
+              </div>
+              <div style={{ maxWidth: '420px', fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
+                Integra <strong>7 modelos estocásticos</strong> calibrados: Supervivencia de Weibull (Hazard), Acoplamiento de Ising, Campana Gaussiana, Entropía de Shannon, Frecuencia JAX, Inferencia Bayesiana y Cadenas de Markov.
+              </div>
+            </div>
+          </div>
+
+          {/* Grid de 6 Tarjetas Detalladas */}
+          <div className="grid-3" style={{ gap: '14px' }}>
+            <div className="card" style={{ margin: 0, background: 'var(--bg-card-subtle)' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 'bold' }}>Score JAX vs Meta</div>
+              <div style={{ fontSize: '1.3rem', fontWeight: '800', margin: '6px 0', color: analisis.score >= scoreMeta ? 'var(--accent-green)' : 'var(--text-primary)' }}>
+                {analisis.score.toFixed(4)}
+              </div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                Meta Histórica: {scoreMeta.toFixed(4)} {analisis.score >= scoreMeta ? '[ADN Ganador]' : '[Por debajo de meta]'}
               </div>
             </div>
 
-            <div className="card" style={{ margin: 0, background: 'rgba(255, 255, 255, 0.01)' }}>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 'bold' }}>Score JAX (Frecuencia)</div>
-              <div style={{ fontSize: '1.4rem', fontWeight: '800', margin: '8px 0', color: 'var(--text-primary)' }}>{analisis.score.toFixed(6)}</div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--accent-blue)', display: 'flex', gap: '4px', alignItems: 'center' }}>
-                <span>{analisis.score >= scoreMediana ? '▲' : '▼'}</span>
-                <span>{(analisis.score - scoreMediana).toFixed(6)} vs Mediana</span>
+            <div className="card" style={{ margin: 0, background: 'var(--bg-card-subtle)' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 'bold' }}>Weibull Hazard (Madurez)</div>
+              <div style={{ fontSize: '1.3rem', fontWeight: '800', margin: '6px 0', color: (analisis.score_hazard || 0) >= 0.65 ? 'var(--accent-green)' : 'var(--text-primary)' }}>
+                {(analisis.score_hazard || 0).toFixed(2)}
               </div>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '8px', lineHeight: '1.4' }}>
-                <strong>Análisis:</strong> {getScoreInterpretation(analisis.score).text}
-              </p>
-            </div>
-
-            <div className="card" style={{ margin: 0, background: 'rgba(255, 255, 255, 0.01)' }}>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 'bold' }}>Gauss & Entropía</div>
-              <div style={{ fontSize: '1.2rem', fontWeight: '700', margin: '8px 0', color: 'var(--text-primary)' }}>
-                Gauss: {(analisis.score_gauss || 0).toFixed(2)} | Entropía: {(analisis.score_entropy || 0).toFixed(2)}
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                Curva de supervivencia ($k=1.1667$). Ventana dorada: 8 a 14 sorteos.
               </div>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '8px', lineHeight: '1.4' }}>
-                Mide si la suma cae en la campana central (~110) y si los números mantienen suficiente aleatoriedad estructural.
-              </p>
             </div>
 
-            <div className="card" style={{ margin: 0, background: 'rgba(255, 255, 255, 0.01)' }}>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 'bold' }}>Bayes & Hazard Rate</div>
-              <div style={{ fontSize: '1.2rem', fontWeight: '700', margin: '8px 0', color: 'var(--text-primary)' }}>
-                Bayes: {(analisis.score_bayes || 0).toFixed(2)} | Hazard: {(analisis.score_hazard || 0).toFixed(2)}
+            <div className="card" style={{ margin: 0, background: 'var(--bg-card-subtle)' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 'bold' }}>Afinidad Ising ($J_{ij}$)</div>
+              <div style={{ fontSize: '1.3rem', fontWeight: '800', margin: '6px 0', color: (analisis.score_ising || 0.5) >= 0.52 ? 'var(--accent-yellow)' : 'var(--text-primary)' }}>
+                {(analisis.score_ising || 0.5).toFixed(2)}
               </div>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '8px', lineHeight: '1.4' }}>
-                Incorpora probabilidades posteriori Dirichlet y la madurez de atraso de las balotas según procesos de Poisson.
-              </p>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                Acoplamiento mutuo y atracción cooperativa entre pares de balotas.
+              </div>
             </div>
 
-            <div className="card" style={{ margin: 0, background: 'rgba(255, 255, 255, 0.01)' }}>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 'bold' }}>Probabilidad Markov Global</div>
-              <div style={{ fontSize: '1.4rem', fontWeight: '800', margin: '8px 0', color: 'var(--text-primary)' }}>{formatProb(analisis.prob_m)}</div>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '8px', lineHeight: '1.4' }}>
-                Evalúa si es natural que esta secuencia de 5 números aparezca junta en un sorteo.
-              </p>
+            <div className="card" style={{ margin: 0, background: 'var(--bg-card-subtle)' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 'bold' }}>Gaussiana (Suma: {analisis.suma})</div>
+              <div style={{ fontSize: '1.3rem', fontWeight: '800', margin: '6px 0', color: 'var(--text-primary)' }}>
+                {(analisis.score_gauss || 0).toFixed(2)}
+              </div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                Proximidad a la zona dorada central ($\mu \approx 110, \sigma \approx 30$).
+              </div>
             </div>
 
-            <div className="card" style={{ margin: 0, background: 'rgba(255, 255, 255, 0.01)', gridColumn: 'span 2' }}>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 'bold' }}>Markov Posicional</div>
-              <div style={{ fontSize: '1.4rem', fontWeight: '800', margin: '8px 0', color: 'var(--text-primary)' }}>{formatProb(analisis.prob_pos)}</div>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '8px', lineHeight: '1.4' }}>
-                {analisis.prob_pos > 1e-20 
-                  ? 'Transición viable con respecto a la última combinación de la lotería real.' 
-                  : 'Transición no registrada con respecto al sorteo anterior.'}
-              </p>
+            <div className="card" style={{ margin: 0, background: 'var(--bg-card-subtle)' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 'bold' }}>Entropía de Shannon</div>
+              <div style={{ fontSize: '1.3rem', fontWeight: '800', margin: '6px 0', color: 'var(--text-primary)' }}>
+                {(analisis.score_entropy || 0).toFixed(2)}
+              </div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                Dispersión espacial no uniforme para evitar aglomeraciones forzadas.
+              </div>
+            </div>
+
+            <div className="card" style={{ margin: 0, background: 'var(--bg-card-subtle)' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 'bold' }}>Bayes & Markov</div>
+              <div style={{ fontSize: '1.1rem', fontWeight: '700', margin: '6px 0', color: 'var(--text-primary)' }}>
+                B: {(analisis.score_bayes || 0).toFixed(2)} | M: {formatProb(analisis.prob_m)}
+              </div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                Suavizado Dirichlet y transición condicionada al último sorteo.
+              </div>
             </div>
           </div>
         </div>
       )}
-
-      {/* Predicciones Posicionales debajo de todo */}
-      <div className="card" style={{ marginTop: '24px' }}>
-        <h3 className="card-title">🔮 Predicciones de Markov Posicional (Próximo Sorteo)</h3>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '12px' }}>
-          Predicción de las transiciones de números más probables para cada balota (B1 a B5 y la Super Balota SB) de acuerdo con los números del último sorteo.
-        </p>
-        <div className="table-responsive">
-          <table className="styled-table">
-            <thead>
-              <tr>
-                <th>Posición</th>
-                <th>Último Número</th>
-                <th>Siguiente Probable</th>
-                <th>Probabilidad de Transición</th>
-              </tr>
-            </thead>
-            <tbody>
-              {posTopData && posTopData.length > 0 ? (
-                posTopData.map((row, i) => (
-                  <tr key={i}>
-                    <td><strong style={{ color: 'var(--text-primary)' }}>{row.Posicion}</strong></td>
-                    <td>{row.Ultimo}</td>
-                    <td style={{ color: 'var(--accent-blue)', fontWeight: 'bold' }}>{row.Siguiente}</td>
-                    <td><code>{row.Probabilidad.toFixed(6)}</code></td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="4" style={{ textAlign: 'center', padding: '20px' }}>
-                    No hay suficientes datos de transiciones para calcular predicciones.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
     </div>
   );
 }

@@ -3,7 +3,7 @@ export default function Politicas({ activeSubTab, setActiveSubTab }) {
   return (
     <div className="politicas-section">
       <div className="card">
-        <h3 className="card-title">⚖️ Legal, Políticas y Contacto</h3>
+        <h3 className="card-title">Legal, Políticas y Contacto</h3>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', margin: '0' }}>
           En cumplimiento con las políticas de transparencia, protección de datos y el programa Google AdSense, ponemos a tu disposición los siguientes documentos legales y canales de comunicación.
         </p>
@@ -16,35 +16,35 @@ export default function Politicas({ activeSubTab, setActiveSubTab }) {
           onClick={() => setActiveSubTab('privacidad')}
           style={{ padding: '8px 12px', fontSize: '0.85rem' }}
         >
-          🔒 Política de Privacidad
+          Política de Privacidad
         </button>
         <button 
           className={`tab-btn ${activeSubTab === 'terminos' ? 'active' : ''}`}
           onClick={() => setActiveSubTab('terminos')}
           style={{ padding: '8px 12px', fontSize: '0.85rem' }}
         >
-          📄 Términos y Condiciones
+          Términos y Condiciones
         </button>
         <button 
           className={`tab-btn ${activeSubTab === 'cookies' ? 'active' : ''}`}
           onClick={() => setActiveSubTab('cookies')}
           style={{ padding: '8px 12px', fontSize: '0.85rem' }}
         >
-          🍪 Política de Cookies
+          Política de Cookies
         </button>
         <button 
           className={`tab-btn ${activeSubTab === 'contacto' ? 'active' : ''}`}
           onClick={() => setActiveSubTab('contacto')}
           style={{ padding: '8px 12px', fontSize: '0.85rem' }}
         >
-          ✉️ Contacto y Soporte
+          Contacto y Soporte
         </button>
       </nav>
 
       {/* Contenido según la subpestaña */}
       {activeSubTab === 'privacidad' && (
         <div className="card" style={{ animation: 'fadeIn 0.2s ease', lineHeight: '1.7', color: 'var(--text-secondary)' }}>
-          <h4 className="card-title" style={{ fontSize: '1.3rem', color: 'var(--text-primary)' }}>🔒 Política de Privacidad</h4>
+          <h4 className="card-title" style={{ fontSize: '1.3rem', color: 'var(--text-primary)' }}>Política de Privacidad</h4>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Última actualización: 11 de Julio, 2026</p>
           
           <p>
@@ -86,7 +86,7 @@ export default function Politicas({ activeSubTab, setActiveSubTab }) {
 
       {activeSubTab === 'terminos' && (
         <div className="card" style={{ animation: 'fadeIn 0.2s ease', lineHeight: '1.7', color: 'var(--text-secondary)' }}>
-          <h4 className="card-title" style={{ fontSize: '1.3rem', color: 'var(--text-primary)' }}>📄 Términos y Condiciones de Uso</h4>
+          <h4 className="card-title" style={{ fontSize: '1.3rem', color: 'var(--text-primary)' }}>Términos y Condiciones de Uso</h4>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Última actualización: 11 de Julio, 2026</p>
 
           <p>
@@ -120,7 +120,7 @@ export default function Politicas({ activeSubTab, setActiveSubTab }) {
 
       {activeSubTab === 'cookies' && (
         <div className="card" style={{ animation: 'fadeIn 0.2s ease', lineHeight: '1.7', color: 'var(--text-secondary)' }}>
-          <h4 className="card-title" style={{ fontSize: '1.3rem', color: 'var(--text-primary)' }}>🍪 Política de Cookies</h4>
+          <h4 className="card-title" style={{ fontSize: '1.3rem', color: 'var(--text-primary)' }}>Política de Cookies</h4>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Última actualización: 11 de Julio, 2026</p>
 
           <p>
@@ -160,20 +160,20 @@ export default function Politicas({ activeSubTab, setActiveSubTab }) {
 
       {activeSubTab === 'contacto' && (
         <div className="card" style={{ animation: 'fadeIn 0.2s ease', lineHeight: '1.7', color: 'var(--text-secondary)' }}>
-          <h4 className="card-title" style={{ fontSize: '1.3rem', color: 'var(--text-primary)' }}>✉️ Contacto y Soporte</h4>
+          <h4 className="card-title" style={{ fontSize: '1.3rem', color: 'var(--text-primary)' }}>Contacto y Soporte</h4>
           <p>
             ¿Tienes dudas, comentarios, sugerencias o requieres soporte técnico sobre el funcionamiento de la web? Puedes ponerte en contacto directo con nosotros. Estaremos encantados de atenderte.
           </p>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px', marginTop: '20px' }}>
             <div style={{ padding: '16px', background: 'var(--bg-primary)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-              <h5 style={{ margin: '0 0 8px 0', fontSize: '1rem', color: 'var(--text-primary)' }}>📧 Correo Electrónico</h5>
+              <h5 style={{ margin: '0 0 8px 0', fontSize: '1rem', color: 'var(--text-primary)' }}>Correo Electrónico</h5>
               <p style={{ margin: '0 0 12px 0', fontWeight: 'bold' }}>soporte@ganabalotoweb.com</p>
               <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>Respondemos a todas tus inquietudes en un plazo máximo de 48 horas hábiles.</p>
             </div>
             
             <div style={{ padding: '16px', background: 'var(--bg-primary)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-              <h5 style={{ margin: '0 0 8px 0', fontSize: '1rem', color: 'var(--text-primary)' }}>📍 Ubicación y Autoría</h5>
+              <h5 style={{ margin: '0 0 8px 0', fontSize: '1rem', color: 'var(--text-primary)' }}>Ubicación y Autoría</h5>
               <p style={{ margin: '0 0 4px 0', fontWeight: 'bold' }}>GanaBaloto Inc.</p>
               <p style={{ margin: '0 0 12px 0', fontSize: '0.9rem' }}>Bogotá D.C., Colombia</p>
               <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>Desarrollado de forma independiente con fines de investigación de datos.</p>

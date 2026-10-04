@@ -22,7 +22,7 @@ export default function MetricasHistorial({ sorteo, data }) {
 
       {/* Tabla ADN Ganadores */}
       <div className="card">
-        <h3 className="card-title">🏆 ADN de Ganadores Históricos (5+1)</h3>
+        <h3 className="card-title">ADN de Ganadores Históricos (5+1)</h3>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '12px' }}>
           Listado de los sorteos históricos de {sorteo} donde se entregó el premio mayor (5 aciertos + Súper Balota).
         </p>
@@ -67,7 +67,7 @@ export default function MetricasHistorial({ sorteo, data }) {
       <div className="grid-2">
         {/* Calientes */}
         <div className="card" style={{ marginBottom: 0 }}>
-          <h3 className="card-title">🔥 Números Calientes</h3>
+          <h3 className="card-title">Números Calientes</h3>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginBottom: '12px' }}>
             Los números con mayor frecuencia de aparición en los últimos 50 sorteos.
           </p>
@@ -101,7 +101,7 @@ export default function MetricasHistorial({ sorteo, data }) {
 
         {/* Fríos */}
         <div className="card" style={{ marginBottom: 0 }}>
-          <h3 className="card-title">❄️ Números Fríos</h3>
+          <h3 className="card-title">Números Fríos</h3>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginBottom: '12px' }}>
             Los números que llevan más tiempo sin salir (mayor racha de ausencia).
           </p>
@@ -138,7 +138,7 @@ export default function MetricasHistorial({ sorteo, data }) {
       <div className="grid-3" style={{ marginTop: '24px' }}>
         {/* Chi2 */}
         <div className="card" style={{ marginBottom: 0 }}>
-          <h3 className="card-title">🎲 Prueba Chi-cuadrado</h3>
+          <h3 className="card-title">Prueba Chi-cuadrado</h3>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginBottom: '12px' }}>
             Determina si el comportamiento de la lotería es aleatorio (p-value &gt; 0.05).
           </p>
@@ -173,7 +173,7 @@ export default function MetricasHistorial({ sorteo, data }) {
 
         {/* Paridad */}
         <div className="card" style={{ marginBottom: 0 }}>
-          <h3 className="card-title">⚖️ Frecuencia de Paridad</h3>
+          <h3 className="card-title">Frecuencia de Paridad</h3>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginBottom: '12px' }}>
             Proporción de números pares e impares en una combinación.
           </p>
@@ -199,7 +199,7 @@ export default function MetricasHistorial({ sorteo, data }) {
 
         {/* Altos / Bajos */}
         <div className="card" style={{ marginBottom: 0 }}>
-          <h3 className="card-title">📉 Altos vs Bajos</h3>
+          <h3 className="card-title">Altos vs Bajos</h3>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginBottom: '12px' }}>
             Frecuencia de balotas bajas (1-21) vs altas (22-43).
           </p>

@@ -65,7 +65,7 @@ export default function RuedaCombinatoria() {
 
   return (
     <div className="card">
-      <h3 className="card-title">⚙️ Sistema de Ruedas Combinatorias (Wheeling System & BIBD)</h3>
+      <h3 className="card-title">Sistema de Ruedas Combinatorias (Wheeling System & BIBD)</h3>
       <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', margin: '0 0 20px 0' }}>
         Selecciona tus números favoritos (entre 5 y 12 números entre 1 y 43) y <strong>una o varias Super Balotas (1 a 16)</strong>. El sistema expandirá las combinaciones optimizadas para garantizar matemáticamente 3 o 4 aciertos tanto para <strong>Baloto</strong> como para <strong>Revancha</strong>.
       </p>
@@ -191,19 +191,19 @@ export default function RuedaCombinatoria() {
         disabled={loading || selectedNums.length < 5}
         style={{ width: '100%' }}
       >
-        {loading ? 'Calculando cobertura de rueda...' : '🔀 Generar Tiquetes Optimizados de Rueda'}
+        {loading ? 'Calculando cobertura de rueda...' : 'Generar Tiquetes Optimizados de Rueda'}
       </button>
 
       {error && (
         <div className="alert alert-error" style={{ marginTop: '20px' }}>
-          <span>❌ {error}</span>
+          <span>Error: {error}</span>
         </div>
       )}
 
       {ruedas && !loading && (
         <div style={{ marginTop: '28px' }}>
           <div className="alert alert-info">
-            🎉 <strong>¡Rueda Combinatoria Generada para {ruedas.sorteo}!</strong>
+            <strong>Rueda Combinatoria Generada para {ruedas.sorteo}</strong>
             <p style={{ margin: '6px 0 0 0' }}>
               Para tus {ruedas.numeros_seleccionados.length} números elegidos [<code>{ruedas.numeros_seleccionados.join(', ')}</code>] y {ruedas.superbalotas.length} Super Balota(s) [<code>{ruedas.superbalotas.join(', ')}</code>], se generaron <strong>{ruedas.tiquetes_base} ruedas base</strong> expandidas a <strong>{ruedas.total_tiquetes} tiquetes de juego totales</strong> con garantía de {ruedas.garantia} aciertos.
             </p>

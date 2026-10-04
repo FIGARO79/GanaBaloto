@@ -3,6 +3,7 @@ import os
 import json
 import numpy as np
 import pandas as pd
+import ganabaloto as gb
 
 try:
     import jax
@@ -13,7 +14,6 @@ except ImportError:
     jax.numpy = np
 
 from flask import Flask, jsonify, request, send_from_directory
-import ganabaloto as gb
 
 # Configuración de la aplicación
 app_config = {"static_folder": "frontend/dist", "static_url_path": ""}
@@ -188,17 +188,25 @@ def get_sorteo(tipo):
         if "Prob. Markov" in record:
             record["Prob. Markov"] = float(record["Prob. Markov"])
 
+    regime_info = r.get("regime_info", {})
+    lag_8_comb = r.get("lag_8_combination", [])
+    lag_8_sb = r.get("lag_8_sb", 0)
+
     return jsonify(
         {
             "sorteo": tipo,
             "last_combination": [int(x) for x in r["last_combination"]],
             "last_sb": int(r["last_sb"]),
             "total_combinations": int(r["total_combinations"]),
+            "total_draws": int(len(r.get("df", []))),
             "score_meta": score_meta,
             "score_mediana": score_mediana,
             "score_p75": score_p75,
             "last_score": last_score,
             "last_markov": last_markov,
+            "regime_info": regime_info,
+            "lag_8_combination": [int(x) for x in lag_8_comb],
+            "lag_8_sb": int(lag_8_sb) if lag_8_sb else 0,
             "hot_numbers": hot,
             "cold_numbers": cold,
             "chi2": chi2,
@@ -225,6 +233,17 @@ def generar():
     weights = gb.get_number_weights(r, gb.N_MAIN_BALLS, gb.N_SUPER_BALOTA)
     combinaciones = gb.generate_probable_combinations(cantidad, r, weights)
 
+    # Anclajes de fecha y lag-8 para badges
+    import datetime
+    ahora = datetime.datetime.now()
+    dia = ahora.day
+    mes = ahora.month
+    suma_dia_mes = dia + mes
+    anclajes_fecha = {dia, mes, suma_dia_mes}
+    lag_8_set = set(r.get("lag_8_combination", []))
+    df_ganadores = gb.analizar_ganadores_historicos(r)
+    score_meta = float(df_ganadores["Score JAX"].mean()) if not df_ganadores.empty else 0.1450
+
     data_res = []
     has_pos_markov = "positional_matrices" in r
     for item in combinaciones:
@@ -242,19 +261,42 @@ def generar():
             if has_pos_markov
             else 0.0
         )
+        score_ising = float(gb.calculate_ising_energy_score(comb, r.get("ising_matrix")))
+
+        # Insignias automáticas
+        insignias = []
+        if len(data_res) == 0:
+            insignias.append("Top 1")
+        if composite >= 70.0:
+            insignias.append("Perfil Óptimo")
+        if score >= score_meta:
+            insignias.append("ADN Ganador")
+        if any(x in anclajes_fecha for x in comb):
+            insignias.append("Fecha")
+        if any(x in lag_8_set for x in comb):
+            insignias.append("Lag-8")
+        if sb in comb:
+            insignias.append("Espejo")
+        if any(comb[k+1] - comb[k] in (4, 6) for k in range(len(comb)-1)):
+            insignias.append("Delta")
+        if score_ising >= 0.52:
+            insignias.append("Ising")
 
         data_res.append(
             {
                 "combinacion": [int(x) for x in comb],
                 "sb": int(sb),
+                "suma": int(sum(comb)),
                 "score": float(score),
                 "composite": float(composite),
                 "score_gauss": float(score_gauss),
                 "score_entropy": float(score_entropy),
                 "score_bayes": float(score_bayes),
                 "score_hazard": float(score_hazard),
+                "score_ising": float(score_ising),
                 "prob_m": float(prob_m),
                 "prob_pos": float(prob_pos),
+                "insignias": insignias,
             }
         )
 
@@ -323,9 +365,12 @@ def analizar():
             jugada_ordenada, sb, r.get("df_gap_analysis", pd.DataFrame())
         )
     )
+    score_ising = float(
+        gb.calculate_ising_energy_score(jugada_ordenada, r.get("ising_matrix"))
+    )
     composite = float(
         gb.calculate_composite_score(
-            score, prob_m, prob_pos, score_gauss, score_entropy, score_bayes, score_hazard
+            score, prob_m, prob_pos, score_gauss, score_entropy, score_bayes, score_hazard, score_ising
         )
     )
 
@@ -339,12 +384,14 @@ def analizar():
         {
             "combinacion": jugada_ordenada,
             "sb": sb,
+            "suma": int(sum(jugada_ordenada)),
             "score": score,
             "composite": composite,
             "score_gauss": score_gauss,
             "score_entropy": score_entropy,
             "score_bayes": score_bayes,
             "score_hazard": score_hazard,
+            "score_ising": score_ising,
             "prob_m": prob_m,
             "prob_pos": prob_pos,
             "veredicto": veredicto_lines,
@@ -407,6 +454,65 @@ def recargar():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     return jsonify({"status": "success"})
+
+
+@app.route("/api/agente/trigger", methods=["POST"])
+def agente_trigger():
+    data = request.get_json() or {}
+    comando = (data.get("trigger") or "").strip().upper()
+    valid_triggers = ["PRONOSTICO", "PRONÓSTICO", "JUGADAS", "GANABALOTO", "EJECUTAR", "RUN"]
+
+    if not any(t in comando for t in valid_triggers):
+        return jsonify({
+            "error": f"Trigger '{comando}' no reconocido. Usa 'PRONOSTICO', 'JUGADAS' o 'GANABALOTO'."
+        }), 400
+
+    try:
+        import subprocess
+        import sys
+
+        script_path = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            ".agents/skills/baloto-analisis-predictivo/scripts/ejecutar_pronostico_completo.py"
+        )
+
+        # 1. Ejecutar para obtener el markdown estándar completo
+        proc_md = subprocess.run(
+            [sys.executable, script_path],
+            capture_output=True,
+            text=True,
+            timeout=90
+        )
+
+        # 2. Ejecutar con --json para obtener los datos estructurados
+        proc_json = subprocess.run(
+            [sys.executable, script_path, "--json"],
+            capture_output=True,
+            text=True,
+            timeout=90
+        )
+
+        datos_json = {}
+        if proc_json.returncode == 0:
+            stdout_text = proc_json.stdout
+            idx = stdout_text.find("{")
+            if idx != -1:
+                try:
+                    datos_json = json.loads(stdout_text[idx:])
+                except Exception as e:
+                    app.logger.error(f"Error parsing agent json: {e}")
+
+        return jsonify({
+            "status": "success",
+            "trigger_ejecutado": comando,
+            "markdown": proc_md.stdout,
+            "datos": datos_json,
+            "stderr": proc_md.stderr
+        })
+    except subprocess.TimeoutExpired:
+        return jsonify({"error": "El motor estocástico excedió el tiempo límite de cálculo."}), 504
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":

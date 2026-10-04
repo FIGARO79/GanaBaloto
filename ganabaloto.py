@@ -14,9 +14,20 @@ import os
 os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
 # Silenciar advertencias de hardware (GPU/TPU)
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
-os.environ["JAX_PLATFORMS"] = (
-    ""  # Permite que JAX elija la mejor disponible sin forzar errores
-)
+
+def _check_cuda_alive():
+    try:
+        import ctypes
+        cuda = ctypes.CDLL("libcuda.so.1")
+        return cuda.cuInit(0) == 0
+    except Exception:
+        return False
+
+# Si CUDA no responde (ej. suspensión de energía o falta de driver), forzar CPU limpiamente
+if not _check_cuda_alive():
+    os.environ["JAX_PLATFORMS"] = "cpu"
+else:
+    os.environ.setdefault("JAX_PLATFORMS", "")
 
 # Importar librerías necesarias
 import pandas as pd

@@ -1,10 +1,12 @@
-# 🎱 GanaBaloto - Análisis Estadístico y Predictivo Multimodelo (Baloto & Revancha)
+# 🎱 GanaBaloto - Motor de Inteligencia Predictiva y Modelado Estocástico Multimodal (Baloto & Revancha)
 
-Este proyecto es una plataforma avanzada de análisis cuantitativo, modelado estocástico y simulación predictiva para los sorteos históricos de **Baloto** y **Revancha** (Colombia). 
+Plataforma avanzada de análisis cuantitativo, modelado estocástico y física estadística aplicada a los sorteos históricos de **Baloto** y **Revancha** (Colombia).
 
-Combina **6 modelos estadísticos y estocásticos independientes** (Cadenas de Markov, Inferencia Bayesiana, Análisis de Hazard/Brechas, Entropía de Selección, Distribución Gaussiana y Computación Vectorizada JAX) para evaluar y proponer combinaciones con perfiles de probabilidad óptimos.
+El sistema integra **7 modelos matemáticos y estadísticos independientes** acelerados por hardware en GPU con **JAX**, evaluando millones de combinaciones para filtrar anomalías y estructurar combinaciones con perfiles de probabilidad, simetría y madurez óptimos.
 
-Dispone tanto de un **sistema interactivo por línea de comandos (CLI)** como de una **aplicación web moderna (Flask + React)**.
+Dispone de un **sistema predictivo automatizado por línea de comandos (CLI / Agente)** y una **aplicación web moderna (Flask REST API + React & Vite)**.
+
+> ℹ️ **Nota de Arquitectura:** Las configuraciones de contenedores (.devcontainer) y Streamlit han sido retiradas y deprecadas en favor de la arquitectura desacoplada moderna: **Backend REST en Flask** y **Frontend interactivo en React + Vite**.
 
 ---
 
@@ -12,145 +14,192 @@ Dispone tanto de un **sistema interactivo por línea de comandos (CLI)** como de
 
 | Componente | Tecnología | Propósito |
 | :--- | :--- | :--- |
-| **Core / Lógica** | **Python 3.10+** | Motor de cálculo, procesamiento estadístico y simulación. |
-| **Aceleración GPU/CPU** | **JAX & jaxlib** | Computación paralela acelerada por hardware con compilación `@jax.jit` para evaluar millones de combinaciones. |
-| **Procesamiento de Datos** | **Pandas & NumPy** | Manipulación de matrices, frecuencias históricas y series de tiempo. |
-| **Cálculo Científico** | **SciPy** | Pruebas de hipótesis (Chi-cuadrado, Runs Test de aleatoriedad, distribuciones). |
-| **Backend REST API** | **Flask & Flask-CORS** | Servidor web liviano para exponer los servicios de análisis y generación. |
-| **Frontend Web** | **React + Vite** | Interfaz web interactiva, moderna y dinámica con tableros y analítica en tiempo real. |
-| **Web Scraping** | **Requests & BeautifulSoup4** | Extracción automatizada de los últimos sorteos oficiales de Baloto. |
-| **Entorno & Paquetes** | **UV (Astral)** | Gestor de paquetes ultrarrápido escrito en Rust para instalación de dependencias aisladas. |
+| **Core / Lógica** | **Python 3.10+** | Motor de cálculo estocástico, analítica y simulación. |
+| **Aceleración GPU/CPU** | **JAX & jaxlib** | Computación paralela acelerada por hardware con compilación `@jax.jit` sobre CUDA (GPU NVIDIA). |
+| **Procesamiento de Datos** | **Pandas & NumPy** | Manipulación de matrices, series temporales y frecuencias históricas. |
+| **Cálculo Científico** | **SciPy** | Pruebas de hipótesis (Chi-cuadrado, Runs Test de Wald-Wolfowitz, distribuciones continuas). |
+| **Backend REST API** | **Flask & Flask-CORS** | Servidor web con endpoints RESTful para análisis, generación y ruedas combinatorias. |
+| **Frontend Web** | **React + Vite** | Interfaz de usuario dinámica, reactiva y modular con analítica visual en tiempo real. |
+| **Web Scraping** | **Requests & BeautifulSoup4** | Extracción automatizada y sincronización de los resultados oficiales de Baloto y Revancha. |
+| **Gestión de Paquetes** | **UV (Astral)** | Gestor de paquetes ultrarrápido escrito en Rust para instalación de dependencias aisladas. |
 
 ---
 
-## 📊 Explicación Detallada de los Cálculos y Modelos
+## 📊 Arquitectura Matemática y Modelos Estocásticos
 
-GanaBaloto integra un **Índice Compuesto Global (0 a 100 puntos)** que evalúa cada jugada combinando 6 dimensiones estadísticas:
+GanaBaloto evalúa cada combinación candidata mediante un **Índice Compuesto Global (0 a 100 puntos)** que integra 7 dimensiones estadísticas calibradas:
 
-$$\text{Índice Compuesto} = 0.25 \cdot S_{\text{JAX}} + 0.20 \cdot M_{\text{Markov}} + 0.20 \cdot S_{\text{Gauss}} + 0.15 \cdot S_{\text{Bayes}} + 0.10 \cdot S_{\text{Hazard}} + 0.10 \cdot S_{\text{Entropía}}$$
+$$\text{Índice Compuesto} = \Big[ 0.20 \cdot \text{Norm}_{\text{JAX}} + 0.15 \cdot M_{\text{Markov}} + 0.15 \cdot S_{\text{Gauss}} + 0.15 \cdot S_{\text{Bayes}} + 0.15 \cdot S_{\text{Weibull}} + 0.10 \cdot S_{\text{Ising}} + 0.10 \cdot S_{\text{Entropía}} \Big] \times 100$$
 
-### 1️⃣ Score JAX (ADN Histórico) – Peso: 25%
-* **Concepto:** Evalúa el peso y frecuencia acumulada histórica de los 5 números y la Super Balota.
-* **Fórmula / Cálculo:** Mide la suma ponderada de apariciones en sorteos pasados, optimizada en JAX. Se normaliza dividiendo entre un umbral de referencia:
-  $$\text{Norm}_{\text{JAX}} = \min\left(1.0, \frac{\text{Score JAX}}{0.20}\right)$$
-* **Interpretación:** Permite identificar si los números de la combinación pertenecen al núcleo de alta presencia histórica en sorteos premiados.
+### 1️⃣ Score JAX (ADN Histórico Vectorizado) – Peso: 20%
+* **Concepto:** Evalúa el peso y frecuencia acumulada de los 5 números y la Super Balota en sorteos premiados.
+* **Fórmula:** Cálculo en JAX compilado por JIT sobre tensores GPU, normalizado frente a la meta histórica:
+  $$\text{Norm}_{\text{JAX}} = \min\left(1.0, \frac{\text{Score JAX}}{\text{Score Meta Histórica}}\right)$$
+* **Interpretación:** Mide si la combinación comparte el "ADN" estadístico presente en los premios mayores históricos.
 
-### 2️⃣ Modelos de Markov Combinados (Global + Posicional) – Peso: 20%
-* **Concepto:** Evalúa la probabilidad estocástica de transición entre sorteos consecutivos.
-* **Fórmula / Cálculo:** Promedia la probabilidad de transición secuencial global y la matriz de probabilidad de transición posicional ($P_1, P_2, P_3, P_4, P_5, SB$):
-  $$M_{\text{Markov}} = 0.5 \cdot \text{Norm}(P_{\text{Markov Global}}) + 0.5 \cdot \text{Norm}(P_{\text{Markov Posicional}})$$
-* **Interpretación:** Captura patrones de secuencia dependientes del sorteo inmediatamente anterior.
+### 2️⃣ Modelos de Markov Combinados (Global + Posicional) – Peso: 15%
+* **Concepto:** Probabilidad estocástica de transición condicionada al sorteo inmediatamente anterior.
+* **Fórmula:** Promedio balanceado de la matriz de transición secuencial global y las matrices de transición posicional ($B_1 \to B_1, \dots, SB \to SB$):
+  $$M_{\text{Markov}} = 0.5 \cdot \text{Norm}(P_{\text{Global}}) + 0.5 \cdot \text{Norm}(P_{\text{Posicional}})$$
 
-### 3️⃣ Distribución Normal Gaussiana (Suma de Balotas) – Peso: 20%
-* **Concepto:** Mide qué tan cerca se encuentra la suma total de las 5 balotas principales del centro de la campana de Gauss histórica.
-* **Fórmula / Cálculo:** Evalúa la suma $S = \sum_{i=1}^5 b_i$ usando la función de densidad de probabilidad gaussiana ($\mu \approx 110, \sigma \approx 30$):
+### 3️⃣ Distribución Normal Gaussiana (Suma de Balotas) – Peso: 15%
+* **Concepto:** Proximidad de la suma de balotas principales al centro de masa de la campana de Gauss histórica ($\mu \approx 110, \sigma \approx 30$).
+* **Fórmula:** Función de densidad de probabilidad normal:
   $$S_{\text{Gauss}} = \exp\left( -\frac{(S - \mu)^2}{2\sigma^2} \right)$$
-* **Interpretación:** Penaliza combinaciones con sumas extremas (muy bajas $< 60$ o muy altas $> 160$) y premia la "zona dorada" (~90 a 130).
+* **Interpretación:** Premia la "zona dorada" (sumas de 90 a 130) y penaliza colas extremas imposibles o altamente improbables ($<60$ o $>165$).
 
-### 4️⃣ Inferencia Bayesiana Continuada (Bayes Score) – Peso: 15%
-* **Concepto:** Aplica probabilidades *a posteriori* utilizando una distribución a priori de Dirichlet / Suavizado Bayesiano.
-* **Fórmula / Cálculo:** Pondera la probabilidad esperada de cada balota dado el histórico total de sorteos:
+### 4️⃣ Inferencia Bayesiana Regularizada (Dirichlet-Multinomial) – Peso: 15%
+* **Concepto:** Probabilidades *a posteriori* con regularización frente a la escasez de datos.
+* **Fórmula:**
   $$S_{\text{Bayes}} = \frac{1}{K} \sum_{i=1}^K \frac{c_i + \alpha}{N + \alpha \cdot M}$$
-  donde $c_i$ es el conteo de la balota, $N$ el total de sorteos, y $\alpha$ el parámetro de suavizado.
-* **Interpretación:** Evita sesgos por muestras pequeñas y proporciona una estimación estable de probabilidad futura.
+  donde $c_i$ es el conteo observado, $N$ el total de sorteos y $\alpha$ el pseudoconteo de Dirichlet.
 
-### 5️⃣ Análisis de Brechas y Hazard Rate (Atraso/Madurez) – Peso: 10%
-* **Concepto:** Evalúa el número de sorteos transcurridos desde la última aparición de cada balota (Gap o Brecha).
-* **Fórmula / Cálculo:** Basado en la función de Hazard estocástica para medir la "presión de retorno" de balotas frías o maduras:
-  $$S_{\text{Hazard}} = 1 - (1 - \lambda)^{g}$$
-  donde $g$ es la brecha actual y $\lambda$ es la tasa constante de retorno esperada.
-* **Interpretación:** Identifica números con un atraso significativo que estadísticamente están en ciclo de retorno.
+### 5️⃣ Análisis de Supervivencia de Weibull (Hazard Rate Calibrado) – Peso: 15%
+* **Concepto:** Modela la tasa de riesgo y madurez del atraso (gaps) mediante una distribución de Weibull ajustada empíricamente ($k = 1.1667, \lambda = 9.0176$).
+* **Fórmula:**
+  $$h(t) = \frac{k}{\lambda} \left(\frac{t}{\lambda}\right)^{k-1}, \quad S_{\text{Weibull}} = \text{Score}(h(t))$$
+* **Interpretación:** Reemplaza la suposición simplista de eventos sin memoria. Identifica la **ventana de madurez óptima (atraso de 8 a 14 sorteos)**, penalizando tanto la inmadurez de corto plazo como los estados de enfriamiento excesivo.
 
-### 6️⃣ Entropía de la Combinación (Dispersión y Aleatoriedad) – Peso: 10%
-* **Concepto:** Mide la dispersión espacial y uniformidad de los números para garantizar variabilidad natural.
-* **Fórmula / Cálculo:** Evalúa los intervalos entre números ordenados $d_i = b_{i+1} - b_i$ calculando la entropía normalizada de Shannon:
-  $$S_{\text{Entropía}} = -\sum p_i \log_2(p_i) / \log_2(K)$$
-* **Interpretación:** Penaliza combinaciones no aleatorias (como secuencias consecutivas `1, 2, 3` o agrupamientos apretados).
+### 6️⃣ Modelo de Energía de Ising para Interacciones Pareadas ($J_{ij}$) – Peso: 10%
+* **Concepto:** Inspirado en el modelo de Ising de física estadística, evalúa la energía de acoplamiento mutuo entre parejas de balotas.
+* **Fórmula:** Matriz de interacción log-odds:
+  $$J_{ij} = \ln\left(\frac{C_{ij} + 1}{\mathbb{E}[C_{ij}] + 1}\right), \quad S_{\text{Ising}} = \frac{1}{10} \sum_{i < j} \sigma\left(J_{b_i, b_j}\right)$$
+* **Interpretación:** Detecta parejas de alta cooperatividad estadística (co-ocurrencias de hasta $1.94\times$ por encima de la expectativa uniforme).
+
+### 7️⃣ Entropía de Shannon (Dispersión y No-Congestión) – Peso: 10%
+* **Concepto:** Mide el desorden armónico espacial entre distancias consecutivas $d_i = b_{i+1} - b_i$.
+* **Fórmula:** Entropía normalizada:
+  $$S_{\text{Entropía}} = -\frac{\sum p(d_i) \log_2 p(d_i)}{\log_2(K)}$$
+* **Interpretación:** Filtra secuencias forzadas, agrupaciones en una única decena o progresiones aritméticas triviales.
+
+---
+
+## 🌀 Detección de Régimen Dinámico (HMM)
+
+El motor implementa un **Modelo Oculto de Markov (HMM)** de 3 estados para identificar el régimen estocástico actual del juego:
+1. **Congestión Baja:** Concentración de balotas en decenas 1 y 2 con sumas $<95$ (régimen activo durante botes acumulados).
+2. **Equilibrio Central:** Dispersión simétrica regular con sumas entre 95 y 125.
+3. **Expansión Alta:** Balotas en decenas 3 y 4 con sumas $>125$.
+
+El sistema ajusta automáticamente las restricciones de generación según la matriz de transición y persistencia del régimen.
 
 ---
 
 ## 🏷️ Sistema de Distintivos e Insignias
 
-Para facilitar la interpretación visual en las sugerencias multimodelo:
+Para auditar y diagnosticar de forma inmediata las características cualitativas de cada combinación generada:
 
-| Distintivo | Nombre | Significado |
+| Insignia | Nombre | Significado Técnico |
 | :---: | :--- | :--- |
-| **🏆** | **Top #1 Recomendación** | Combinación con el **Índice Compuesto Global** más alto del ranking. |
-| **🌟** | **Perfil Óptimo (Excelente)** | Combinación con **Índice Compuesto $\ge 70.0/100$**, que supera holgadamente todos los filtros estadísticos. |
-| **🧬** | **ADN Ganador JAX** | Indica que el **Score JAX** de la jugada superó el promedio histórico real de los ganadores (`score_meta`). |
+| **🏆** | **Top #1** | Máximo **Índice Compuesto Global** del universo evaluado. |
+| **🌟** | **Perfil Óptimo** | Calificación integral $\ge 70.0/100$ en la escala estocástica multidimensional. |
+| **🧬** | **ADN Ganador** | Score JAX superior al promedio histórico real de los boletos ganadores del premio mayor 5+1. |
+| **📅** | **Fecha** | Integra anclajes de calendario del sorteo (día, mes o suma de dígitos del sorteo). |
+| **🌀** | **Lag-8** | Resuena con el sorteo de hace 8 fechas (patrón cíclico detectado en botes millonarios). |
+| **🪞** | **Espejo** | Efecto donde la Super Balota coincide como número principal (presente en el bote récord #2717 de $61.600M). |
+| **⚡** | **Delta** | Presenta saltos aritméticos simétricos de $+4$ o $+6$ observados en los acumulados históricos. |
+| **🧲** | **Ising** | Alta afinidad mutua pareada ($J_{ij}$ positivo y estadísticamente significativo). |
 
 ---
 
-## ⚙️ Funcionalidades Adicionales
+## 🛡️ Ruedas Combinatorias Reducidas (Wheeling Systems)
 
-1. **⚙️ Ruedas Combinatorias Reducidas (Wheeling System):**
-   Permite seleccionar entre 7 y 15 balotas favoritas y generar un conjunto reducido de tiquetes que garantiza matemáticamente condiciones de acierto (ej. 4 de 5 o 3 de 5) optimizando el presupuesto de juego.
-
-2. **🔍 Analizador Manual de Jugadas:**
-   Permite al usuario ingresar cualquier boleto de 5 números + Super Balota para recibir una auditoría instantánea con su *Índice Compuesto* y un veredicto cualitativo detallado punto por punto.
-
-3. **📊 Pruebas de Aleatoriedad y Chi-Cuadrado:**
-   Genera reportes de significancia estadística para confirmar si la serie histórica actual del Baloto o Revancha cumple con las propiedades de aleatoriedad esperadas.
+Algoritmo de cobertura basado en **Greedy Set-Cover** que permite seleccionar un grupo de $N$ números clave (ej. 7 a 15) y generar un número mínimo de tiquetes con **garantía matemática determinista de $t$ aciertos**:
+* Ejemplo: Para 7 números clave con garantía de 3 aciertos, se generan solo **10 tiquetes** que cubren el 100% de los subconjuntos requeridos. Si al menos 3 de los 7 números seleccionados salen sorteados, se tiene asegurado matemáticamente un premio en la apuesta.
 
 ---
 
-## 🚀 Instalación y Configuración
+## 🚀 Instalación y Puesta en Marcha
 
-### 1️⃣ Instalación Automatizada
-El instalador configura un entorno virtual `.venv`, instala **UV** para velocidad y descarga dependencias. Además, detecta automáticamente GPUs NVIDIA para habilitar aceleración CUDA en JAX.
+### 1️⃣ Prerrequisitos
+* **Python 3.10+**
+* **Node.js 18+ & npm** (para la interfaz React)
+* **GPU NVIDIA** con soporte CUDA (opcional, aceleración JAX automática; fallback en CPU)
 
-* **Linux / macOS:**
-  ```bash
-  chmod +x instalar.sh
-  ./instalar.sh
-  ```
-* **Windows:**
-  ```cmd
-  instalar.bat
-  ```
+### 2️⃣ Instalación Rápida
+El proyecto utiliza **UV** para la gestión rápida y determinista del entorno virtual:
 
----
-
-## 💻 Ejecución
-
-### 1️⃣ Actualizar Resultados (Web Scraper)
 ```bash
-./actualizar.sh       # Linux / macOS
-actualizar.bat        # Windows
+# Dar permisos de ejecución e instalar
+chmod +x instalar.sh
+./instalar.sh
 ```
 
-### 2️⃣ Ejecutar Motor en Consola (CLI)
+O manualmente:
 ```bash
-./ejecutar_baloto.sh  # Linux / macOS
-ejecutar_baloto.bat   # Windows
+uv venv
+uv pip install -r requirements.txt
+uv pip install jax[cuda12] # Opcional para aceleración GPU NVIDIA
+cd frontend && npm install && npm run build && cd ..
 ```
-
-### 3️⃣ Ejecutar Aplicación Web (Flask + React)
-```bash
-./ejecutar_web.sh     # Linux / macOS
-```
-O accede manualmente iniciando `app.py` en backend y `npm run dev` en `frontend/`.
 
 ---
 
-## 📁 Estructura de Directorios
+## 💻 Modos de Uso y Ejecución
+
+### ⚡ 1. Pronóstico Rápido Automatizado (CLI / Agente)
+Genera el reporte integral oficial de 4 secciones para el próximo sorteo:
+```bash
+./.venv/bin/python .agents/skills/baloto-analisis-predictivo/scripts/ejecutar_pronostico_completo.py
+```
+*(En el entorno de agentes, invocar directamente con la palabra activadora `PRONOSTICO`).*
+
+### 🌐 2. Servidor Web Completo (Flask + React)
+Inicia la API REST en el puerto 5000 y sirve la aplicación web interactiva:
+```bash
+./ejecutar_web.sh
+```
+O de manera manual:
+```bash
+./.venv/bin/python app.py
+```
+Accede desde tu navegador a `http://localhost:5000`.
+
+### 🧪 3. Suite de Pruebas de Integración API
+Ejecuta la suite automatizada para validar el 100% de los endpoints REST:
+```bash
+./.venv/bin/python .agents/skills/baloto-servicio-web/scripts/test_api.py
+```
+
+### 🔄 4. Actualización del Histórico (Web Scraper)
+Descarga los últimos resultados oficiales y sincroniza `baloto.json`:
+```bash
+./actualizar.sh
+# O directamente:
+./.venv/bin/python actualizar_resultados.py
+```
+
+---
+
+## 📁 Estructura del Proyecto
 
 ```
 GanaBaloto/
-├── .venv/                     # Entorno virtual con dependencias aisladas
-├── baloto.json                # Base de datos histórica (Baloto y Revancha)
-├── ganabaloto.py              # Motor predictivo principal y CLI interactivo
-├── app.py                     # Backend REST API en Flask
-├── frontend/                  # Aplicación Frontend React + Vite
-├── actualizar_resultados.py   # Script de web scraping oficial
-├── GUIA_ANALISIS.md           # Guía de usuario e interpretación
-├── README.md                  # Documentación principal del proyecto
-├── requirements.txt           # Dependencias de Python
-└── *.sh / *.bat               # Lanzadores y utilidades de ejecución
+├── .agents/skills/                   # Skills especializadas para agentes autónomos
+│   ├── baloto-actualizador/          # Scraping y auditoría de integridad histórica
+│   ├── baloto-analisis-predictivo/   # Motor estocástico, pronósticos y ruedas reducidas
+│   └── baloto-servicio-web/          # Suite de pruebas y gestión del servicio web
+├── frontend/                         # Aplicación Web React + Vite
+│   ├── src/                          # Componentes, vistas y lógica reactiva
+│   ├── dist/                         # Artefactos estáticos compilados para producción
+│   └── package.json                  # Dependencias frontend
+├── .venv/                            # Entorno virtual aislado de Python (UV)
+├── app.py                            # Servidor Backend REST API en Flask
+├── ganabaloto.py                     # Núcleo algorítmico, fórmulas estocásticas y CLI
+├── baloto.json                       # Base de datos histórica oficial (Baloto y Revancha)
+├── baloto.xlsx                       # Hoja de cálculo sincronizada de resultados
+├── actualizar_resultados.py          # Scraper oficial de resultados
+├── ANALISIS_GANADORES_BALOTO.md      # Auditoría empírica de los 23 botes históricos 5+1
+├── GUIA_ANALISIS.md                  # Manual de interpretación estadística para usuarios
+├── README.md                         # Documentación maestra del proyecto
+├── requirements.txt                  # Dependencias Python
+└── *.sh / *.bat                      # Scripts automatizados de instalación y ejecución
 ```
 
 ---
 
-## 🛡️ Descargo de Responsabilidad
+## 🛡️ Descargo de Responsabilidad (Juego Responsable)
 
-Este software es una herramienta de análisis cuantitativo y exploración de datos históricos con fines educativos y de investigación. Los sorteos de Baloto y Revancha son eventos estadísticamente aleatorios e independientes. El uso de este software no garantiza premios ni beneficios financieros. Juegue con responsabilidad.
+Este software es una plataforma avanzada de análisis cuantitativo, simulación computacional y física estadística con fines estrictamente educativos y de investigación. 
+
+Los sorteos de lotería Baloto y Revancha son eventos físicos independientes y aleatorios. La probabilidad matemática teórica de acertar 5 balotas principales y la Super Balota en una sola combinación es de **1 en 15.401.568**. Ningún algoritmo, sistema estadístico o modelo predictivo puede garantizar premios mayores. Juegue siempre de manera responsable y con presupuesto moderado.

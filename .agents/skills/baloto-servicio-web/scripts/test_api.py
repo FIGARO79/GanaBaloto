@@ -29,13 +29,13 @@ def run_tests():
             "detalle": detalle,
             "duracion_ms": round(duracion_ms, 1),
         })
-        icono = "✅ PASS" if exitoso else "❌ FAIL"
+        icono = "PASS" if exitoso else "FAIL"
         print(f"[{icono}] {nombre} ({duracion_ms:.1f} ms)")
         if not exitoso and detalle:
             print(f"        Detalle: {detalle}")
 
     print("\n" + "=" * 65)
-    print("🧪 INICIANDO SUITE DE PRUEBAS - API REST GANABALOTO")
+    print("SUITE DE PRUEBAS - API REST GANABALOTO")
     print("=" * 65)
 
     # 1. GET /api/sorteo/Baloto
@@ -143,6 +143,16 @@ def run_tests():
     dt = (time.time() - t0) * 1000
     registrar("POST /api/recargar", res.status_code == 200, duracion_ms=dt)
 
+    # 9. POST /api/agente/trigger (Manejo de trigger inválido 400)
+    t0 = time.time()
+    res = client.post(
+        "/api/agente/trigger",
+        data=json.dumps({"trigger": "COMANDO_INEXISTENTE"}),
+        content_type="application/json",
+    )
+    dt = (time.time() - t0) * 1000
+    registrar("POST /api/agente/trigger (400 esperado)", res.status_code == 400, duracion_ms=dt)
+
     # Resumen
     tiempo_total = (time.time() - inicio_total) * 1000
     total_pruebas = len(pruebas)
@@ -150,7 +160,7 @@ def run_tests():
     fallidas = total_pruebas - aprobadas
 
     print("-" * 65)
-    print(f"📊 RESUMEN: {aprobadas}/{total_pruebas} pruebas exitosas ({fallidas} fallidas) en {tiempo_total:.1f} ms.")
+    print(f"RESUMEN: {aprobadas}/{total_pruebas} pruebas exitosas ({fallidas} fallidas) en {tiempo_total:.1f} ms.")
     print("=" * 65 + "\n")
 
     return fallidas == 0

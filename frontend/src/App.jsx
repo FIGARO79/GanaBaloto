@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react';
+import ConsolaAgente from './components/ConsolaAgente.jsx';
 import Sugerencias from './components/Sugerencias.jsx';
 import AnalizadorManual from './components/AnalizadorManual.jsx';
 import RuedaCombinatoria from './components/RuedaCombinatoria.jsx';
 import MetricasHistorial from './components/MetricasHistorial.jsx';
 import Metodologia from './components/Metodologia.jsx';
 import AcercaDe from './components/AcercaDe.jsx';
-import Blog from './components/Blog.jsx';
 import Politicas from './components/Politicas.jsx';
-import AdBanner from './components/AdBanner.jsx';
 import './App.css';
 
 const formatProb = (val) => {
@@ -47,10 +46,7 @@ function App() {
   };
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchSorteoData(sorteo);
-    }, 0);
-    return () => clearTimeout(timer);
+    fetchSorteoData(sorteo);
   }, [sorteo]);
 
   const recargarBaseDatos = async () => {
@@ -71,13 +67,16 @@ function App() {
     }
   };
 
+  const regName = data?.regime_info?.current_regime || 'Equilibrio Central';
+  const regProb = data?.regime_info?.transition_prob !== undefined ? data.regime_info.transition_prob.toFixed(2) : '0.85';
+
   return (
     <div className="dashboard-container">
       {/* Barra Lateral (Sidebar) */}
       <aside className="sidebar">
         <div className="sidebar-brand">
-          <div className="sidebar-logo">8</div>
-          <span className="sidebar-brand-name">GanaBaloto Web</span>
+          <div className="sidebar-logo">GB</div>
+          <span className="sidebar-brand-name">GanaBaloto</span>
         </div>
         
         <hr style={{ border: 'none', borderTop: '1px solid var(--border-color)', margin: '0' }} />
@@ -105,9 +104,16 @@ function App() {
         <hr style={{ border: 'none', borderTop: '1px solid var(--border-color)', margin: '0' }} />
 
         <div className="sidebar-section">
-          <div className="engine-box">
+          <div className="engine-box" style={{ marginBottom: '12px' }}>
             <span className="engine-title">Motor de Cálculo</span>
-            <span className="engine-value">⚡ JAX (CPU/GPU)</span>
+            <span className="engine-value">JAX (NVIDIA GPU / XLA)</span>
+          </div>
+
+          <div className="engine-box" style={{ background: 'rgba(59, 130, 246, 0.08)', borderColor: 'rgba(59, 130, 246, 0.2)' }}>
+            <span className="engine-title">Régimen Dinámico (HMM)</span>
+            <span className="engine-value" style={{ color: 'var(--accent-blue)', fontSize: '0.85rem' }}>
+              {regName}
+            </span>
           </div>
         </div>
 
@@ -118,201 +124,152 @@ function App() {
             disabled={reloadingDb}
             style={{ width: '100%', fontSize: '0.85rem' }}
           >
-            {reloadingDb ? 'Recargando...' : '🔄 Recargar Base de Datos'}
+            {reloadingDb ? 'Recargando...' : 'Recargar Base de Datos'}
           </button>
-
-          {/* Bloque de Anuncio Vertical en Barra Lateral */}
-          <AdBanner slot="1234567890" format="vertical" />
         </div>
       </aside>
 
       {/* Contenido Principal */}
       <main className="main-content">
-        <header className="main-header">
+        <header className="main-header" style={{ marginBottom: '20px' }}>
           <div className="main-title-container">
-            <div className="main-logo">8</div>
+            <div className="main-logo">GB</div>
             <div>
-              <h1 className="main-title">GanaBaloto Web</h1>
-              <p className="main-subtitle">Análisis estocástico y probabilístico de lotería mediante Cadenas de Markov.</p>
+              <h1 className="main-title">GanaBaloto Intelligence</h1>
+              <p className="main-subtitle">
+                Motor de modelado estocástico multimodal, física estadística (Weibull & Ising) y aceleración JAX.
+              </p>
             </div>
           </div>
         </header>
 
-        <section className="card content-intro">
-          <h2 className="card-title">Una herramienta para interpretar patrones de Baloto con criterio</h2>
-          <p className="content-intro-text">
-            GanaBaloto Web combina resultados históricos, métricas probabilísticas y una metodología clara para ayudarte a entender mejor cómo se comportan los sorteos y a tomar decisiones con más contexto.
-          </p>
-          <div className="content-intro-grid">
-            <div className="info-card">
-              <h3>¿Qué incluye?</h3>
-              <p>Sugerencias inteligentes, métricas de historial y un analizador manual para comparar combinaciones con más detalle.</p>
-            </div>
-            <div className="info-card">
-              <h3>¿Cómo leer los resultados?</h3>
-              <p>El panel muestra puntuaciones, probabilidades y comparativas históricas para que el análisis sea más comprensible.</p>
-            </div>
-            <div className="info-card">
-              <h3>¿Por qué esta web existe?</h3>
-              <p>Porque la lotería no es solo azar: comprender patrones y distribuciones ayuda a analizar mejor cada sorteo.</p>
-            </div>
-          </div>
-        </section>
-
-        <section className="card">
-          <h3 className="card-title">❓ Preguntas frecuentes</h3>
-          <div className="faq-list">
-            <details>
-              <summary>¿Qué significa el score JAX?</summary>
-              <p>Es una métrica que compara la frecuencia histórica de una combinación con el comportamiento general del sorteo.</p>
-            </details>
-            <details>
-              <summary>¿Sirve para predecir resultados?</summary>
-              <p>No garantiza aciertos, pero sí ofrece un marco más informado para comparar combinaciones de forma estadística.</p>
-            </details>
-            <details>
-              <summary>¿Por qué hay una metodología tan detallada?</summary>
-              <p>Porque el objetivo es que la web sea útil y transparente, no solo visual. La metodología ayuda a entender el origen de cada señal.</p>
-            </details>
-          </div>
-        </section>
-
-        <section className="content-support-grid">
-          <div className="card">
-            <h3 className="card-title">📘 Cómo usar esta web</h3>
-            <p className="content-intro-text" style={{ marginBottom: '12px' }}>
-              La idea de esta plataforma es mostrar un análisis más amplio del comportamiento histórico de Baloto y Revancha, ayudando a interpretar las series de resultados con mayor contexto.
-            </p>
-            <ul className="info-list">
-              <li>Comienza por elegir el sorteo en la barra lateral.</li>
-              <li>Revisa las sugerencias inteligentes para ver combinaciones con mejor perfil histórico.</li>
-              <li>Consulta la pestaña de métricas si quieres entender cómo se distribuyen las frecuencias.</li>
-              <li>Usa la metodología para conocer el fundamento detrás del análisis.</li>
-            </ul>
-          </div>
-
-          <div className="card">
-            <h3 className="card-title">🧭 Acerca de la propuesta</h3>
-            <p className="content-intro-text" style={{ marginBottom: '12px' }}>
-              Esta web busca presentar el análisis de forma práctica, clara y educativa, con explicaciones que ayudan a comprender el contexto de cada recomendación.</p>
-            <ul className="info-list">
-              <li>Explica los conceptos básicos de forma sencilla.</li>
-              <li>Relaciona los datos con el comportamiento histórico real.</li>
-              <li>Ofrece una lectura menos superficial y más informada.</li>
-            </ul>
-          </div>
-        </section>
-
         {/* Navegación de Pestañas */}
-        <nav className="tabs-navigation">
+        <nav className="tabs-navigation" style={{ marginBottom: '20px' }}>
+          <button 
+            className={`tab-btn ${activeTab === 'agente' ? 'active' : ''}`}
+            onClick={() => setActiveTab('agente')}
+            style={{ fontWeight: 'bold', borderBottom: activeTab === 'agente' ? '2px solid var(--accent-yellow)' : 'none' }}
+          >
+            Consola de Agente (Trigger)
+          </button>
           <button 
             className={`tab-btn ${activeTab === 'sugerencias' ? 'active' : ''}`}
             onClick={() => setActiveTab('sugerencias')}
           >
-            🔮 Sugerencias Inteligentes
+            Sugerencias Inteligentes
           </button>
           <button 
             className={`tab-btn ${activeTab === 'analizador' ? 'active' : ''}`}
             onClick={() => setActiveTab('analizador')}
           >
-            📝 Analizador Manual
+            Analizador Manual (7D)
           </button>
           <button 
             className={`tab-btn ${activeTab === 'rueda' ? 'active' : ''}`}
             onClick={() => setActiveTab('rueda')}
           >
-            🔀 Ruedas de Juego
+            Ruedas Reducidas
           </button>
           <button 
             className={`tab-btn ${activeTab === 'metricas' ? 'active' : ''}`}
             onClick={() => setActiveTab('metricas')}
           >
-            📊 Métricas e Historial
-          </button>
-          <button 
-            className={`tab-btn ${activeTab === 'blog' ? 'active' : ''}`}
-            onClick={() => setActiveTab('blog')}
-          >
-            📚 Artículos Educativos
+            Métricas e Historial
           </button>
           <button 
             className={`tab-btn ${activeTab === 'metodologia' ? 'active' : ''}`}
             onClick={() => setActiveTab('metodologia')}
           >
-            📘 Metodología y Guía
+            Metodología y Modelos
           </button>
           <button 
             className={`tab-btn ${activeTab === 'acerca' ? 'active' : ''}`}
             onClick={() => setActiveTab('acerca')}
           >
-            ℹ️ Acerca de
+            Acerca de
           </button>
           <button 
             className={`tab-btn ${activeTab === 'politicas' ? 'active' : ''}`}
             onClick={() => setActiveTab('politicas')}
           >
-            ⚖️ Legal y Contacto
+            Legal
           </button>
         </nav>
 
-        {/* Carga del Contenido según la Pestaña Activa */}
+        {/* Estado de Carga / Error */}
         {loading ? (
           <div className="loading-container">
             <div className="spinner"></div>
-            <p>Analizando historial y matrices de Markov con JAX...</p>
+            <p>Sincronizando tensores de JAX, matrices de Ising y parámetros de Weibull...</p>
           </div>
         ) : error ? (
           <div className="alert alert-error">
-            <span>❌ Error al cargar los datos: {error}</span>
+            <span>Error al cargar los datos: {error}</span>
           </div>
         ) : data ? (
           <div>
-            {/* Cabecera de Resumen Rápido */}
-            <div className="card" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '20px', background: 'rgba(59, 130, 246, 0.04)' }}>
+            {/* Cabecera de Resumen y Métricas Clave del Sorteo */}
+            <div className="card" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '20px', background: 'rgba(59, 130, 246, 0.04)', marginBottom: '24px' }}>
               <div>
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 'bold', textTransform: 'uppercase' }}>Último sorteo analizado</span>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 'bold', textTransform: 'uppercase' }}>
+                  Última Extracción Registrada ({sorteo})
+                </span>
                 <div className="balotas-container" style={{ margin: '8px 0 0 0' }}>
                   {data.last_combination.map((num, i) => (
-                    <div key={i} className="balota balota-principal" style={{ width: '36px', height: '36px' }}>
-                      <div className="balota-inner" style={{ width: '20px', height: '20px', fontSize: '12px' }}>{num}</div>
+                    <div key={i} className="balota balota-principal" style={{ width: '38px', height: '38px' }}>
+                      <div className="balota-inner" style={{ width: '22px', height: '22px', fontSize: '13px' }}>
+                        {num < 10 ? `0${num}` : num}
+                      </div>
                     </div>
                   ))}
                   <div className="balota-separator" style={{ fontSize: '20px' }}>+</div>
-                  <div className="balota balota-super" style={{ width: '36px', height: '36px' }}>
-                    <div className="balota-inner" style={{ width: '20px', height: '20px', fontSize: '12px' }}>{data.last_sb}</div>
+                  <div className="balota balota-super" style={{ width: '38px', height: '38px' }}>
+                    <div className="balota-inner" style={{ width: '22px', height: '22px', fontSize: '13px' }}>
+                      {data.last_sb < 10 ? `0${data.last_sb}` : data.last_sb}
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
                 <div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 'bold', textTransform: 'uppercase' }}>Score JAX Último</div>
-                  <div style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-primary)' }}>{data.last_score !== undefined ? data.last_score.toFixed(6) : '0.000000'}</div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 'bold', textTransform: 'uppercase' }}>Régimen (HMM)</div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--accent-blue)' }}>{regName}</div>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>P_persist: {regProb}</div>
                 </div>
                 <div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 'bold', textTransform: 'uppercase' }}>Prob. Markov Último</div>
-                  <div style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-primary)' }}>{data.last_markov !== undefined ? formatProb(data.last_markov) : '0.000000'}</div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 'bold', textTransform: 'uppercase' }}>Meta ADN JAX</div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--accent-green)' }}>{(data.score_meta || 0.1495).toFixed(4)}</div>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Promedio botes 5+1</div>
                 </div>
+                {data.lag_8_combination && data.lag_8_combination.length > 0 && (
+                  <div>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 'bold', textTransform: 'uppercase' }}>Resonancia Lag-8</div>
+                    <div style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-primary)' }}>
+                      {data.lag_8_combination.map(x => x < 10 ? `0${x}` : x).join('-')}
+                    </div>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--accent-yellow)' }}>SB: [{data.lag_8_sb}]</div>
+                  </div>
+                )}
                 <div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 'bold', textTransform: 'uppercase' }}>Mediana Histórica</div>
-                  <div style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-primary)' }}>{data.score_mediana.toFixed(6)}</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 'bold', textTransform: 'uppercase' }}>Combinaciones Posibles</div>
-                  <div style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--accent-blue)' }}>{data.total_combinations.toLocaleString()}</div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 'bold', textTransform: 'uppercase' }}>Histórico</div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--text-primary)' }}>{data.total_draws || 1022} sorteos</div>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Base oficial baloto.json</div>
                 </div>
               </div>
             </div>
 
-            {/* Anuncio Horizontal de Contenido */}
-            <AdBanner slot="0987654321" format="horizontal" />
+            {/* Contenido de la pestaña activa */}
+            {activeTab === 'agente' && (
+              <ConsolaAgente />
+            )}
 
-            {/* Contenido de la pestaña */}
             {activeTab === 'sugerencias' && (
               <Sugerencias 
                 sorteo={sorteo} 
                 scoreMediana={data.score_mediana} 
-                scoreP75={data.score_p75} 
+                scoreP75={data.score_p75}
+                scoreMeta={data.score_meta}
               />
             )}
             
@@ -321,7 +278,7 @@ function App() {
                 sorteo={sorteo} 
                 scoreMediana={data.score_mediana} 
                 scoreP75={data.score_p75}
-                posTopData={data.pos_top_data}
+                scoreMeta={data.score_meta}
               />
             )}
 
@@ -335,11 +292,7 @@ function App() {
                 data={data}
               />
             )}
-            
-            {activeTab === 'blog' && (
-              <Blog />
-            )}
-            
+
             {activeTab === 'metodologia' && (
               <Metodologia />
             )}
@@ -357,15 +310,15 @@ function App() {
           </div>
         ) : null}
 
-        {/* Footer para enlaces AdSense */}
+        {/* Footer Técnico y de Responsabilidad */}
         <footer className="dashboard-footer" style={{
           marginTop: '45px',
-          padding: '30px 20px',
+          padding: '24px 20px',
           borderTop: '1px solid var(--border-color)',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          gap: '15px',
+          gap: '12px',
           color: 'var(--text-muted)',
           fontSize: '0.85rem',
           textAlign: 'center'
@@ -373,45 +326,29 @@ function App() {
           <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
             <span 
               style={{ cursor: 'pointer', transition: 'color 0.2s', fontWeight: '500' }}
-              onMouseEnter={(e) => e.target.style.color = 'var(--accent-blue)'}
-              onMouseLeave={(e) => e.target.style.color = 'var(--text-muted)'}
               onClick={() => { setActiveTab('politicas'); setPoliticasSubTab('privacidad'); }}
             >
-              🔒 Política de Privacidad
+              Política de Privacidad
             </span>
-            <span>|</span>
+            <span>•</span>
             <span 
               style={{ cursor: 'pointer', transition: 'color 0.2s', fontWeight: '500' }}
-              onMouseEnter={(e) => e.target.style.color = 'var(--accent-blue)'}
-              onMouseLeave={(e) => e.target.style.color = 'var(--text-muted)'}
               onClick={() => { setActiveTab('politicas'); setPoliticasSubTab('terminos'); }}
             >
-              📄 Términos y Condiciones
+              Términos y Condiciones
             </span>
-            <span>|</span>
+            <span>•</span>
             <span 
               style={{ cursor: 'pointer', transition: 'color 0.2s', fontWeight: '500' }}
-              onMouseEnter={(e) => e.target.style.color = 'var(--accent-blue)'}
-              onMouseLeave={(e) => e.target.style.color = 'var(--text-muted)'}
-              onClick={() => { setActiveTab('politicas'); setPoliticasSubTab('cookies'); }}
-            >
-              🍪 Política de Cookies
-            </span>
-            <span>|</span>
-            <span 
-              style={{ cursor: 'pointer', transition: 'color 0.2s', fontWeight: '500' }}
-              onMouseEnter={(e) => e.target.style.color = 'var(--accent-blue)'}
-              onMouseLeave={(e) => e.target.style.color = 'var(--text-muted)'}
               onClick={() => { setActiveTab('politicas'); setPoliticasSubTab('contacto'); }}
             >
-              ✉️ Contacto
+              Contacto
             </span>
           </div>
-          <p style={{ margin: '5px 0 0 0', maxWidth: '700px', fontSize: '0.8rem', lineHeight: '1.6' }}>
-            🎱 <strong>GanaBaloto Web</strong> © {new Date().getFullYear()}. Todos los derechos reservados. 
-            Este sitio provee análisis estadístico descriptivo e histórico de sorteos de lotería colombianos. 
-            No está afiliado, patrocinado ni asociado con Coljuegos, el operador oficial de Baloto/Revancha, ni ninguna entidad gubernamental de sorteos. 
-            El análisis de datos sirve con fines de entretenimiento y divulgación probabilística. Juegue con responsabilidad.
+          <p style={{ margin: '4px 0 0 0', maxWidth: '750px', fontSize: '0.8rem', lineHeight: '1.5' }}>
+            <strong>GanaBaloto Intelligence</strong> © {new Date().getFullYear()}. Plataforma de computación estocástica y divulgación científica. 
+            No está afiliada, patrocinada ni asociada con Coljuegos ni el operador oficial de Baloto/Revancha. 
+            Los sorteos son eventos físicos independientes. Probabilidad teórica de 5+1: 1 en 15.401.568. Juegue con responsabilidad.
           </p>
         </footer>
       </main>

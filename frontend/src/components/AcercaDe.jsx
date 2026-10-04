@@ -1,7 +1,7 @@
 export default function AcercaDe() {
   return (
     <div className="card">
-      <h3 className="card-title">🧭 Acerca de GanaBaloto Web</h3>
+      <h3 className="card-title">Acerca de GanaBaloto Web</h3>
       <p style={{ color: 'var(--text-secondary)', lineHeight: 1.7, marginBottom: '16px' }}>
         GanaBaloto Web nace como una guía práctica para explorar resultados históricos de Baloto y Revancha con un enfoque más analítico y transparentemente estadístico.
       </p>
