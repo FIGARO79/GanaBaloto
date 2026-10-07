@@ -65,9 +65,12 @@ def imprimir_cabecera(info_sorteo, res_baloto, res_revancha):
 def imprimir_leyenda(cfg):
     print("> **Leyenda de Insignias:**")
     print("> * **Top #1:** Mayor Índice Ajustado del sorteo.")
-    print(f"> * **Ajustado:** Índice + {cfg.peso_sim:.2f}×Similitud − {cfg.peso_pop:.2f}×Popularidad (criterio de orden final).")
-    print("> * **Similitud (0-100):** Parecido con los botes 5+1 históricos (frecuencia en botes, perfil de suma/bajos/SB y solape máximo).")
-    print("> * **Popul. (0-100):** Probabilidad de compartir premio (todo ≤31, consecutivos, progresión, números de suerte). Menor es mejor.")
+    if cfg.peso_pop > 0:
+        print(f"> * **Ajustado:** Índice + {cfg.peso_sim:.2f}×Similitud − {cfg.peso_pop:.2f}×Popularidad (criterio de orden final).")
+        print("> * **Popul. (0-100):** Probabilidad de compartir premio (todo ≤31, consecutivos, progresión, números de suerte). Menor es mejor.")
+    else:
+        print(f"> * **Ajustado:** Índice + {cfg.peso_sim:.2f}×Similitud (criterio de orden final enfocado en maximizar aciertos).")
+        print("> * **Popul. (0-100):** Grado de concurrencia pública en fechas ≤31 (informativo, sin penalizar jugadas para priorizar aciertos).")
     print(r"> * **Perfil Óptimo:** Calificación $\ge 70.0/100$ en la escala global multidimensional.")
     print("> * **ADN Ganador:** Supera el umbral promedio histórico de combinaciones ganadoras del premio mayor.")
     print("> * **Fecha:** Integra anclajes de calendario (día, mes o suma de dígitos del sorteo).")

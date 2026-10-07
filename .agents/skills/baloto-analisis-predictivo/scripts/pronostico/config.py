@@ -17,7 +17,7 @@ class Config:
     """Parámetros del ranking final y del tamaño de la salida."""
 
     peso_sim: float = 0.20  # peso de la Similitud con botes en el Índice Ajustado
-    peso_pop: float = 0.10  # peso de la penalización por Popularidad
+    peso_pop: float = 0.00  # peso de la penalización por Popularidad (0.0 para no penalizar y maximizar aciertos)
     max_solape: int = 2  # balotas máximas compartidas entre jugadas del Top
     n_top: int = 5
     n_pool: int = 120
