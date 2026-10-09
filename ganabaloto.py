@@ -146,10 +146,43 @@ def calculate_frequency_score_jax(
     return jnp.where(denominator == 0, 0.0, score / denominator)
 
 
+@jax.jit
+def calculate_frequency_scores_jax_batch(
+    combinations_batch_jax, sbs_batch_jax, freq_table_main_jax, freq_table_sb_jax, denominator_jax
+):
+    """Calcula el puntaje de frecuencia para un lote (batch) de combinaciones en JAX (GPU/CPU)."""
+    main_scores = jnp.take(freq_table_main_jax, combinations_batch_jax).sum(axis=-1)
+    sb_scores = jnp.take(freq_table_sb_jax, sbs_batch_jax) * K_MAIN_BALLS
+    return jnp.where(denominator_jax == 0, 0.0, (main_scores + sb_scores) / denominator_jax)
+
+
 def calculate_sequence_probability(sequence, transition_matrix):
-    """Calcula la probabilidad de una secuencia de números basada en Markov."""
+    """Calcula la probabilidad de una secuencia de números basada en Markov (optimizado O(1))."""
     if not sequence or len(sequence) < 2:
         return 1.0
+
+    if isinstance(transition_matrix, pd.DataFrame):
+        arr = transition_matrix.attrs.get("_arr_cache")
+        if arr is None:
+            arr = transition_matrix.values
+            try:
+                transition_matrix.attrs["_arr_cache"] = arr
+            except Exception:
+                pass
+        prob = 1.0
+        n_rows, n_cols = arr.shape
+        for i in range(len(sequence) - 1):
+            c_num = sequence[i] - 1
+            n_num = sequence[i + 1] - 1
+            if 0 <= c_num < n_rows and 0 <= n_num < n_cols:
+                p = float(arr[c_num, n_num])
+                if p <= 0:
+                    return 0.0
+                prob *= p
+            else:
+                return 0.0
+        return prob
+
     probability = 1.0
     for i in range(len(sequence) - 1):
         current_num = sequence[i]
@@ -168,7 +201,7 @@ def calculate_sequence_probability(sequence, transition_matrix):
 def calculate_positional_markov_probability(
     combination, sb, positional_matrices, last_combination, last_sb
 ):
-    """Calcula la probabilidad usando cadenas de Markov posicionales (B1→B1, B2→B2, etc.)."""
+    """Calcula la probabilidad usando cadenas de Markov posicionales (B1→B1, B2→B2, etc.) optimizado."""
     probability = 1.0
     all_cols = COLUMNS_TO_ANALYZE + [SUPER_BALOTA_COLUMN]
     current_vals = list(combination) + [sb]
@@ -176,18 +209,38 @@ def calculate_positional_markov_probability(
 
     for i, col in enumerate(all_cols):
         matrix = positional_matrices.get(col)
-        if matrix is None or matrix.empty:
+        if matrix is None or (isinstance(matrix, pd.DataFrame) and matrix.empty):
             continue
         prev_num = previous_vals[i]
         curr_num = current_vals[i]
-        if prev_num in matrix.index and curr_num in matrix.columns:
-            prob = matrix.loc[prev_num, curr_num]
-            if prob > 0:
-                probability *= prob
+
+        if isinstance(matrix, pd.DataFrame):
+            arr = matrix.attrs.get("_arr_cache")
+            if arr is None:
+                arr = matrix.values
+                try:
+                    matrix.attrs["_arr_cache"] = arr
+                except Exception:
+                    pass
+            p_idx = prev_num - 1
+            c_idx = curr_num - 1
+            if 0 <= p_idx < arr.shape[0] and 0 <= c_idx < arr.shape[1]:
+                prob = float(arr[p_idx, c_idx])
+                if prob > 0:
+                    probability *= prob
+                else:
+                    probability *= 1e-10
             else:
                 probability *= 1e-10
         else:
-            probability *= 1e-10
+            if prev_num in matrix.index and curr_num in matrix.columns:
+                prob = matrix.loc[prev_num, curr_num]
+                if prob > 0:
+                    probability *= prob
+                else:
+                    probability *= 1e-10
+            else:
+                probability *= 1e-10
 
     return probability
 
@@ -216,48 +269,82 @@ def calculate_shannon_entropy(combination):
 
 
 def calculate_bayesian_dirichlet_score(
-    combination, sb, main_counts_dict, sb_counts_dict, total_draws, alpha=1.0
+    combination, sb, main_counts_dict, sb_counts_dict, total_draws, alpha=1.0, bayes_lookup=None
 ):
-    """Calcula la probabilidad a posteriori Dirichlet-Multinomial normalizada (0 a 1)."""
+    """Calcula la probabilidad a posteriori Dirichlet-Multinomial normalizada (0 a 1) optimizado."""
     if total_draws <= 0:
         return 0.5
-    prior_prob = 1.0 / N_MAIN_BALLS
-    main_score = 0.0
-    for num in combination:
-        count = main_counts_dict.get(num, 0)
-        post_prob = (count + alpha) / (K_MAIN_BALLS * total_draws + N_MAIN_BALLS * alpha)
-        main_score += post_prob / (prior_prob * 2.0)
 
-    prior_sb_prob = 1.0 / N_SUPER_BALOTA
-    sb_count = sb_counts_dict.get(sb, 0)
-    post_sb_prob = (sb_count + alpha) / (total_draws + N_SUPER_BALOTA * alpha)
-    sb_score = post_sb_prob / (prior_sb_prob * 2.0)
+    if bayes_lookup is not None:
+        main_table, sb_table = bayes_lookup
+    else:
+        prior_prob = 1.0 / N_MAIN_BALLS
+        denom_main = (K_MAIN_BALLS * total_draws + N_MAIN_BALLS * alpha) * (prior_prob * 2.0)
+        main_table = np.zeros(N_MAIN_BALLS + 1, dtype=np.float64)
+        for num in range(1, N_MAIN_BALLS + 1):
+            count = main_counts_dict.get(num, 0) if isinstance(main_counts_dict, dict) else 0
+            main_table[num] = (count + alpha) / denom_main
+
+        prior_sb_prob = 1.0 / N_SUPER_BALOTA
+        denom_sb = (total_draws + N_SUPER_BALOTA * alpha) * (prior_sb_prob * 2.0)
+        sb_table = np.zeros(N_SUPER_BALOTA + 1, dtype=np.float64)
+        for s in range(1, N_SUPER_BALOTA + 1):
+            sb_count = sb_counts_dict.get(s, 0) if isinstance(sb_counts_dict, dict) else 0
+            sb_table[s] = (sb_count + alpha) / denom_sb
+
+    main_score = sum(main_table[num] for num in combination if 1 <= num <= N_MAIN_BALLS)
+    sb_score = sb_table[sb] if 1 <= sb <= N_SUPER_BALOTA else 0.5
 
     total_score = (main_score / K_MAIN_BALLS) * 0.8 + (sb_score) * 0.2
     return max(0.0, min(1.0, total_score))
 
 
 def calculate_weibull_hazard_score(combination, sb, df_gap_analysis, shape=1.1667, scale=9.0176):
-    """Calcula la presión estadística acumulada bajo un modelo de supervivencia Weibull calibrado con desgaste real (k=1.1667)."""
-    if df_gap_analysis.empty:
+    """Calcula la presión estadística acumulada bajo un modelo de supervivencia Weibull calibrado con desgaste real (k=1.1667) optimizado O(1)."""
+    if df_gap_analysis is None or (isinstance(df_gap_analysis, pd.DataFrame) and df_gap_analysis.empty):
         return 0.5
-    gap_map = {}
-    for _, row in df_gap_analysis.iterrows():
-        tipo = row.get("Tipo")
-        num = row.get("Número")
-        gap_val = row.get("Brecha (Sorteos)")
-        if gap_val != "N/A" and pd.notna(gap_val):
-            gap_map[(tipo, int(num))] = float(gap_val)
 
-    scores = []
-    for num in combination:
-        g = gap_map.get(("Main", num), 0.0)
-        w_p = 1.0 - math.exp(-math.pow(max(0.0, g) / scale, shape))
-        scores.append(w_p)
+    lookup = None
+    if isinstance(df_gap_analysis, pd.DataFrame):
+        lookup = df_gap_analysis.attrs.get("_hazard_lookup_cache")
+    elif isinstance(df_gap_analysis, dict):
+        lookup = df_gap_analysis.get("_hazard_lookup_cache")
 
-    sb_g = gap_map.get(("SB", sb), 0.0)
-    sb_scale = scale * (N_SUPER_BALOTA / N_MAIN_BALLS * 3.5)
-    sb_w_p = 1.0 - math.exp(-math.pow(max(0.0, sb_g) / sb_scale, shape))
+    if lookup is None:
+        gap_map = {}
+        if isinstance(df_gap_analysis, pd.DataFrame):
+            for row in df_gap_analysis.itertuples(index=False):
+                tipo = getattr(row, "Tipo")
+                num = getattr(row, "Número")
+                gap_val = getattr(row, "_3") if hasattr(row, "_3") else getattr(row, "Brecha__Sorteos_", "N/A")
+                if gap_val != "N/A" and pd.notna(gap_val):
+                    gap_map[(tipo, int(num))] = float(gap_val)
+        elif isinstance(df_gap_analysis, dict):
+            gap_map = df_gap_analysis
+
+        main_scores = np.zeros(N_MAIN_BALLS + 1, dtype=np.float64)
+        for n in range(1, N_MAIN_BALLS + 1):
+            g = gap_map.get(("Main", n), 0.0)
+            main_scores[n] = 1.0 - math.exp(-math.pow(max(0.0, g) / scale, shape))
+
+        sb_scale = scale * (N_SUPER_BALOTA / N_MAIN_BALLS * 3.5)
+        sb_scores = np.zeros(N_SUPER_BALOTA + 1, dtype=np.float64)
+        for s in range(1, N_SUPER_BALOTA + 1):
+            sb_g = gap_map.get(("SB", s), 0.0)
+            sb_scores[s] = 1.0 - math.exp(-math.pow(max(0.0, sb_g) / sb_scale, shape))
+
+        lookup = (main_scores, sb_scores)
+        if isinstance(df_gap_analysis, pd.DataFrame):
+            try:
+                df_gap_analysis.attrs["_hazard_lookup_cache"] = lookup
+            except Exception:
+                pass
+        elif isinstance(df_gap_analysis, dict):
+            df_gap_analysis["_hazard_lookup_cache"] = lookup
+
+    main_table, sb_table = lookup
+    scores = [main_table[num] for num in combination if 1 <= num <= N_MAIN_BALLS]
+    sb_w_p = sb_table[sb] if 1 <= sb <= N_SUPER_BALOTA else 0.5
 
     avg_main = sum(scores) / len(scores) if scores else 0.5
     total = avg_main * 0.8 + sb_w_p * 0.2
@@ -270,18 +357,17 @@ def calculate_gap_hazard_score(combination, sb, df_gap_analysis):
 
 
 def calculate_ising_energy_score(combination, ising_matrix):
-    """Calcula la afinidad de acoplamiento mutuo cooperativo (Modelo de Ising / Máxima Entropía) entre los 5 números."""
+    """Calcula la afinidad de acoplamiento mutuo cooperativo (Modelo de Ising / Máxima Entropía) vectorizado con NumPy."""
     if ising_matrix is None or (isinstance(ising_matrix, np.ndarray) and ising_matrix.size == 0):
         return 0.5
-    comb = sorted(list(combination))
-    coupling_sum = 0.0
-    pair_count = 0
-    for i in range(len(comb)):
-        for j in range(i + 1, len(comb)):
-            b1, b2 = comb[i], comb[j]
-            if 1 <= b1 < ising_matrix.shape[0] and 1 <= b2 < ising_matrix.shape[1]:
-                coupling_sum += float(ising_matrix[b1, b2])
-                pair_count += 1
+    idx = [b for b in combination if 1 <= b < ising_matrix.shape[0]]
+    if len(idx) < 2:
+        return 0.5
+
+    sub = ising_matrix[np.ix_(idx, idx)]
+    coupling_sum = float(np.triu(sub, k=1).sum())
+    pair_count = len(idx) * (len(idx) - 1) // 2
+
     if pair_count == 0:
         return 0.5
     avg_coupling = coupling_sum / pair_count
@@ -785,15 +871,19 @@ def generate_probable_combinations(num_combinations, results, weights):
         if any(c[0] == combination and c[1] == sb for c in generated):
             continue
 
-        score = float(
-            calculate_frequency_score_jax(
-                jnp.array(combination),
-                jnp.array(sb),
-                results["b_cols_jax"],
-                results["sb_col_jax"],
-                results["total_draws_jax_val"],
+        if "freq_table_main" in results and "freq_table_sb" in results and results.get("total_draws", 0) > 0:
+            denom = results["total_draws"] * (K_MAIN_BALLS + 1)
+            score = float((results["freq_table_main"][combination].sum() + results["freq_table_sb"][sb] * K_MAIN_BALLS) / denom)
+        else:
+            score = float(
+                calculate_frequency_score_jax(
+                    jnp.array(combination),
+                    jnp.array(sb),
+                    results["b_cols_jax"],
+                    results["sb_col_jax"],
+                    results["total_draws_jax_val"],
+                )
             )
-        )
 
         prob_m = float(calculate_sequence_probability(combination, transition_matrix))
         prob_pos = float(
@@ -814,6 +904,7 @@ def generate_probable_combinations(num_combinations, results, weights):
             results.get("main_counts_dict", {}),
             results.get("sb_counts_dict", {}),
             results.get("total_draws", 0),
+            bayes_lookup=results.get("bayes_lookup_cache"),
         )
         score_hazard = calculate_gap_hazard_score(
             combination, sb, results.get("df_gap_analysis", pd.DataFrame())
@@ -1111,13 +1202,78 @@ def analizar_sorteo(nombre_hoja, df):
             pos_matrix[cur] = {n: c / tot for n, c in nexts.items()}
 
         max_range = N_SUPER_BALOTA if col == SUPER_BALOTA_COLUMN else N_MAIN_BALLS
-        positional_matrices[col] = (
+        p_df = (
             pd.DataFrame(pos_matrix)
             .T.reindex(index=range(1, max_range + 1), columns=range(1, max_range + 1))
             .fillna(0)
         )
+        p_df.attrs["_arr_cache"] = p_df.values
+        positional_matrices[col] = p_df
 
     res["positional_matrices"] = positional_matrices
+    res["df_transition_matrix"].attrs["_arr_cache"] = res["df_transition_matrix"].values
+
+    # Pre-cálculo de frecuencias para NumPy y JAX (Score JAX O(1))
+    main_flat = df[COLUMNS_TO_ANALYZE].values.flatten()
+    freq_main = np.zeros(N_MAIN_BALLS + 1, dtype=np.float64)
+    for x in main_flat:
+        if 1 <= x <= N_MAIN_BALLS:
+            freq_main[x] += 1
+    freq_sb = np.zeros(N_SUPER_BALOTA + 1, dtype=np.float64)
+    for x in df[SUPER_BALOTA_COLUMN].values:
+        if 1 <= x <= N_SUPER_BALOTA:
+            freq_sb[x] += 1
+
+    res["freq_table_main"] = freq_main
+    res["freq_table_sb"] = freq_sb
+    try:
+        res["freq_table_main_jax"] = jnp.array(freq_main, dtype=jnp.float32)
+        res["freq_table_sb_jax"] = jnp.array(freq_sb, dtype=jnp.float32)
+    except Exception:
+        pass
+
+    # Pre-cálculo de lookup para Weibull Hazard Rate
+    if not res["df_gap_analysis"].empty:
+        gap_map = {}
+        for row in res["df_gap_analysis"].itertuples(index=False):
+            tipo = getattr(row, "Tipo")
+            num = getattr(row, "Número")
+            gap_val = getattr(row, "_3") if hasattr(row, "_3") else getattr(row, "Brecha__Sorteos_", "N/A")
+            if gap_val != "N/A" and pd.notna(gap_val):
+                gap_map[(tipo, int(num))] = float(gap_val)
+
+        shape_w = 1.1667
+        scale_w = 9.0176
+        main_h_scores = np.zeros(N_MAIN_BALLS + 1, dtype=np.float64)
+        for n in range(1, N_MAIN_BALLS + 1):
+            g = gap_map.get(("Main", n), 0.0)
+            main_h_scores[n] = 1.0 - math.exp(-math.pow(max(0.0, g) / scale_w, shape_w))
+
+        sb_scale_w = scale_w * (N_SUPER_BALOTA / N_MAIN_BALLS * 3.5)
+        sb_h_scores = np.zeros(N_SUPER_BALOTA + 1, dtype=np.float64)
+        for s in range(1, N_SUPER_BALOTA + 1):
+            sb_g = gap_map.get(("SB", s), 0.0)
+            sb_h_scores[s] = 1.0 - math.exp(-math.pow(max(0.0, sb_g) / sb_scale_w, shape_w))
+
+        res["df_gap_analysis"].attrs["_hazard_lookup_cache"] = (main_h_scores, sb_h_scores)
+
+    # Pre-cálculo de lookup para Dirichlet-Multinomial Bayesiano
+    alpha_b = 1.0
+    prior_prob_b = 1.0 / N_MAIN_BALLS
+    denom_main_b = (K_MAIN_BALLS * len(df) + N_MAIN_BALLS * alpha_b) * (prior_prob_b * 2.0)
+    main_b_scores = np.zeros(N_MAIN_BALLS + 1, dtype=np.float64)
+    for num in range(1, N_MAIN_BALLS + 1):
+        count = res["main_counts_dict"].get(num, 0)
+        main_b_scores[num] = (count + alpha_b) / denom_main_b
+
+    prior_sb_prob_b = 1.0 / N_SUPER_BALOTA
+    denom_sb_b = (len(df) + N_SUPER_BALOTA * alpha_b) * (prior_sb_prob_b * 2.0)
+    sb_b_scores = np.zeros(N_SUPER_BALOTA + 1, dtype=np.float64)
+    for s in range(1, N_SUPER_BALOTA + 1):
+        sb_count = res["sb_counts_dict"].get(s, 0)
+        sb_b_scores[s] = (sb_count + alpha_b) / denom_sb_b
+
+    res["bayes_lookup_cache"] = (main_b_scores, sb_b_scores)
 
     # JAX Prep
     try:

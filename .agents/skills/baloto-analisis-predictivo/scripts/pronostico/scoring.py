@@ -12,14 +12,19 @@ def evaluar_jugada_directa(comb, sb, r):
     """Evalúa una combinación de 5 balotas y Super Balota usando el motor JAX de 7 dimensiones (incluye Weibull e Ising)."""
     comb = sorted(list(comb))
     sb = int(sb)
-    score = float(gb.calculate_frequency_score_jax(
-        jax.numpy.array(comb), jax.numpy.array(sb),
-        r["b_cols_jax"], r["sb_col_jax"], r["total_draws_jax_val"]
-    ))
+    if "freq_table_main" in r and "freq_table_sb" in r and r.get("total_draws", 0) > 0:
+        denom = r["total_draws"] * (gb.K_MAIN_BALLS + 1)
+        score = float((r["freq_table_main"][comb].sum() + r["freq_table_sb"][sb] * gb.K_MAIN_BALLS) / denom)
+    else:
+        score = float(gb.calculate_frequency_score_jax(
+            jax.numpy.array(comb), jax.numpy.array(sb),
+            r["b_cols_jax"], r["sb_col_jax"], r["total_draws_jax_val"]
+        ))
     score_gauss = float(gb.calculate_sum_gaussian_score(comb))
     score_entropy = float(gb.calculate_shannon_entropy(comb))
     score_bayes = float(gb.calculate_bayesian_dirichlet_score(
-        comb, sb, r.get("main_counts_dict", {}), r.get("sb_counts_dict", {}), r.get("total_draws", 0)
+        comb, sb, r.get("main_counts_dict", {}), r.get("sb_counts_dict", {}), r.get("total_draws", 0),
+        bayes_lookup=r.get("bayes_lookup_cache"),
     ))
     score_hazard = float(gb.calculate_gap_hazard_score(
         comb, sb, r.get("df_gap_analysis", pd.DataFrame())
