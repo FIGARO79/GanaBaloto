@@ -60,8 +60,21 @@ def obtener_todos_los_resultados():
             if "Baloto" not in heading.text or not heading.find("time"):
                 continue
 
-            # Extraer Número de Sorteo
-            match_sorteo = re.search(r"Resultado Baloto (\d+)", heading.text, re.IGNORECASE)
+            # Extraer Número de Sorteo (búsqueda flexible en heading, enlaces y contenedor)
+            match_sorteo = (
+                re.search(r"Baloto\s*(?:N[°º]|#|sorteo)?\s*(\d{4})", heading.text, re.IGNORECASE)
+                or re.search(r"sorteo\s*[:#-]?\s*(\d{4})", heading.text, re.IGNORECASE)
+                or re.search(r"Resultado\s+Baloto\s*[:#-]?\s*(\d+)", heading.text, re.IGNORECASE)
+            )
+            if not match_sorteo:
+                link = heading.find("a")
+                if link and link.get("title"):
+                    match_sorteo = re.search(r"sorteo\s*[:#-]?\s*(\d{4})", link.get("title"), re.IGNORECASE)
+            if not match_sorteo:
+                parent = heading.find_parent(class_="panel")
+                if parent:
+                    match_sorteo = re.search(r"sorteo\s*[:#-]?\s*(\d{4})", parent.text, re.IGNORECASE)
+
             sorteo_num = int(match_sorteo.group(1)) if match_sorteo else None
 
             # Extraer Fecha

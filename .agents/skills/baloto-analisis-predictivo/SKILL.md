@@ -19,26 +19,38 @@ Para profundizar en la formulación matemática de los 6 modelos estocásticos, 
 Cuando el usuario ingrese la palabra activadora:
 * **`PRONOSTICO`** (o sus alias **`JUGADAS`**, **`GANABALOTO`**)
 
-El agente debe ejecutar de inmediato el flujo de pronóstico completo estandarizado y presentar el reporte estructurado en 4 secciones sin necesidad de requerir prompts adicionales.
+El agente debe ejecutar de inmediato el flujo de pronóstico completo estandarizado y presentar el reporte estructurado en 5 secciones sin necesidad de requerir prompts adicionales, asumiendo su rol como **Consejero y Analista Profesional de Inversión (Bankroll Management)**.
+
+### 🏛️ Los 3 Pilares Permanentes del Consejero
+1. **Auditoría de Brechas:** Siempre desglosar tanto el Top por Momentum/JAX (Perfil A) como la Alternativa por Atraso Extremo (Perfil B), auditando brechas de Super Balota y balotas principales.
+2. **Optimización Financiera:** Mantener el enfoque estricto en los 2 tiquetes combinados de $9.000 COP ($18.000 COP en total) para que cada peso invertido cubra ambos juegos (Baloto + Revancha) al máximo nivel, con 10 balotas distintas sin solapes innecesarios.
+3. **Rotación Transparente:** Garantizar que el algoritmo explore dinámicamente todo el bombo (1-43 en balotas y 1-16 en Super Balotas) sin confinamientos en "clubes cerrados" ni sesgos de botes antiguos.
 
 ---
 
 ## Capacidades y Flujos de Trabajo
 
 ### 1. Pronóstico Completo Estandarizado (Flujo Principal)
-Ejecuta el script integral que calcula candidatos optimizados por JAX, filtra distintivos (🌟 Perfil Óptimo $\ge 70$, 🧬 ADN Ganador), audita las jugadas #1 y genera la rueda reducida con garantía de aciertos.
+Ejecuta el script integral que calcula candidatos optimizados por JAX, filtra distintivos (🌟 Perfil Óptimo $\ge 70$, 🧬 ADN Ganador), audita las jugadas #1, genera la rueda reducida con garantía de aciertos y presenta la estrategia financiera óptima de 2 tiquetes duales ($18.000 COP).
 
-**Comando:**
+**Comandos habituales según el entorno:**
 ```bash
-./.venv/bin/python .agents/skills/baloto-analisis-predictivo/scripts/ejecutar_pronostico_completo.py
+# Entorno WSL / Linux:
+./.venv_wsl/bin/python .agents/skills/baloto-analisis-predictivo/scripts/ejecutar_pronostico_completo.py
+
+# Entorno Windows / Virtualenv activo:
+./.venv/Scripts/python .agents/skills/baloto-analisis-predictivo/scripts/ejecutar_pronostico_completo.py
 ```
 
-**Estructura del Reporte de Salida:**
+**Estructura del Reporte de Salida (5 Secciones):**
 1. **Cabecera de Entorno:** Motor estocástico (JAX / GPU detectada) y dataset analizado (`baloto.json`).
 2. **🎱 1. Pronósticos Recomendados: Baloto:** Tabla Markdown con Top 5 jugadas (`#`, `Combinación`, `Suma`, `Índice`, `JAX`, `Gauss`, `Entropía`, `Bayes`, `Hazard`, `Insignias`).
 3. **🎱 2. Pronósticos Recomendados: Revancha:** Tabla Markdown con Top 5 jugadas bajo el mismo formato y leyenda de insignias.
 4. **🔬 3. Auditoría Detallada de las Jugadas Estrella:** Diagnóstico cualitativo de las jugadas Top #1 de Baloto y Revancha (Suma/Gauss, Entropía, JAX vs Meta histórica, SB y Hazard rate).
 5. **🛡️ 4. Estrategia Avanzada: Rueda Combinatoria Reducida (Wheeling System):** Bloque de 7 números clave cruzados con 2 Super Balotas líderes con garantía matemática de 3 aciertos (10 tiquetes optimizados).
+6. **💰 5. Asesoría Financiera: Estrategia de 2 Tiquetes Duales ($18.000 COP Total):**
+   * **Perfil A (Momentum & Frecuencia):** Tiquete 1 (Top Baloto + SB líder) y Tiquete 2 (Top Revancha + SB líder).
+   * **Perfil B (Cazador de Ruptura por Atraso Extremo - 🎯 PERFIL COMPROMETIDO DEL JUGADOR):** Sustituye las Super Balotas por las de mayor brecha histórica (mayor atraso acumulado, e.g. SB 06 y SB 13) para maximizar la asimetría positiva de retorno cubriendo 10 balotas distintas sin solapes.
 
 ---
 

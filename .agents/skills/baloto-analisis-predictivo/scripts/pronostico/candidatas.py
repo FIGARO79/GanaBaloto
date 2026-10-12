@@ -14,16 +14,18 @@ from .modelos import Jugada, ResultadoSorteo
 from .scoring import evaluar_jugada_directa, calcular_similitud_botes, calcular_popularidad
 
 
-def generar_candidatas_ancladas(r, info_sorteo, sorteo_nombre, n_generar=100):
+def generar_candidatas_ancladas(r, info_sorteo, sorteo_nombre, weights=None, n_generar=100):
     """Genera combinaciones candidatas que integran anclajes de fecha, pivotes de botes y resonancia Lag-8."""
     anclajes = info_sorteo["anclajes_principales"]
     pivotes = info_sorteo["pivotes_botes"].get(sorteo_nombre, [8, 4])
-    sbs = list(info_sorteo["sbs_reinas"].get(sorteo_nombre, [15, 10]))
     lag_8_info = info_sorteo.get("lag_8_data", {}).get(sorteo_nombre, {})
     balotas_lag_8 = lag_8_info.get("balotas", [])
-    sb_lag_8 = lag_8_info.get("sb")
-    if sb_lag_8 and sb_lag_8 not in sbs:
-        sbs.append(sb_lag_8)
+
+    if weights is None:
+        weights = gb.get_number_weights(r, gb.N_MAIN_BALLS, gb.N_SUPER_BALOTA)
+
+    sb_numbers = list(range(1, gb.N_SUPER_BALOTA + 1))
+    sb_weights = [weights[("sb", i)] for i in sb_numbers]
 
     # Núcleos de 2 elementos cruzando anclajes de calendario, pivotes de bote y resonancia cíclica
     pool_nucleos = list(set(anclajes + pivotes + balotas_lag_8))
@@ -38,33 +40,41 @@ def generar_candidatas_ancladas(r, info_sorteo, sorteo_nombre, n_generar=100):
         if len(candidatas) >= n_generar or intentos >= max_intentos:
             break
         intentos += 1
-        sb = random.choice(sbs)
+        sb = random.choices(sb_numbers, weights=sb_weights, k=1)[0]
 
-        restantes = [x for x in range(1, gb.N_MAIN_BALLS + 1) if x not in nuc]
+        # Variabilidad estocástica: alternar entre 1 o 2 números de núcleo para no sobre-restringir
+        if random.random() < 0.50:
+            sub_nuc = [random.choice(nuc)]
+            n_faltan_total = 4
+        else:
+            sub_nuc = list(nuc)
+            n_faltan_total = 3
+
+        restantes = [x for x in range(1, gb.N_MAIN_BALLS + 1) if x not in sub_nuc]
         trio = []
 
         # Salto aritmético +4 o +6 (firma observada en botes ganadores)
         if random.random() < 0.35 and restantes:
-            base_n = random.choice(nuc)
+            base_n = random.choice(sub_nuc)
             salto = random.choice([4, 6])
             candidato_salto = base_n + salto if base_n + salto <= gb.N_MAIN_BALLS else base_n - salto
-            if 1 <= candidato_salto <= gb.N_MAIN_BALLS and candidato_salto not in nuc and candidato_salto in restantes:
+            if 1 <= candidato_salto <= gb.N_MAIN_BALLS and candidato_salto not in sub_nuc and candidato_salto in restantes:
                 trio.append(candidato_salto)
                 restantes.remove(candidato_salto)
 
         # Efecto Espejo Bote (SB coincide con balota principal)
-        if sb <= gb.N_MAIN_BALLS and random.random() < 0.25 and sb not in nuc and sb in restantes and len(trio) < 3:
+        if sb <= gb.N_MAIN_BALLS and random.random() < 0.25 and sb not in sub_nuc and sb in restantes and len(trio) < n_faltan_total:
             trio.append(sb)
             restantes.remove(sb)
 
-        # Completar hasta 3 números
-        faltan = 3 - len(trio)
+        # Completar hasta alcanzar 5 números en total
+        faltan = n_faltan_total - len(trio)
         if faltan > 0 and len(restantes) >= faltan:
             trio.extend(random.sample(restantes, faltan))
 
-        comb = sorted(list(nuc) + trio)
-        # Rango de suma calibrado para régimen de botes (75 a 125)
-        if 75 <= sum(comb) <= 125:
+        comb = sorted(list(sub_nuc) + trio)
+        # Rango de suma calibrado para la zona gaussiana real (70 a 135)
+        if 70 <= sum(comb) <= 135:
             item = evaluar_jugada_directa(comb, sb, r)
             if item[3] >= 65.0:  # Índice compuesto viable
                 candidatas.append(item)
@@ -102,7 +112,7 @@ def obtener_mejores_jugadas(sorteo_nombre, data_json, info_sorteo, cfg=None):
     candidatas_puras = gb.generate_probable_combinations(cfg.n_pool, r, weights)
 
     # 2. Candidatas con anclajes de fecha, botes y resonancia Lag-8
-    candidatas_ancladas = generar_candidatas_ancladas(r, info_sorteo, sorteo_nombre, n_generar=100)
+    candidatas_ancladas = generar_candidatas_ancladas(r, info_sorteo, sorteo_nombre, weights=weights, n_generar=100)
 
     # 3. Unificar y ordenar por Índice Ajustado = Compuesto + w_sim*Similitud - w_pop*Popularidad
     botes_hist = extraer_botes_ganadores(data_json, sorteo_nombre)

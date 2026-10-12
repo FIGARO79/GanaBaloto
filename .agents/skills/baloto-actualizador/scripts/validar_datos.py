@@ -81,6 +81,12 @@ def auditar_dataset(file_path):
                 errores.append(f"{fila_id}: Faltan campos requeridos: {faltantes}")
                 continue
 
+            # Validar Número de Sorteo si está presente
+            if "Sorteo" in item:
+                val_sorteo = item["Sorteo"]
+                if not isinstance(val_sorteo, int) or val_sorteo <= 0:
+                    errores.append(f"{fila_id}: Número de sorteo inválido Sorteo={val_sorteo} (debe ser entero > 0).")
+
             # Validar Fecha
             fecha_str = str(item["Fecha"]).strip()
             try:

@@ -30,53 +30,59 @@ def construir_rueda_optima(data_json, info_sorteo):
     """Construye una selección inteligente de 7 números y 2 SBs para Rueda Reducida sincronizada."""
     df_b = pd.DataFrame(data_json["Baloto"])
     r_b = gb.analizar_sorteo("Baloto", df_b)
+    weights = gb.get_number_weights(r_b, gb.N_MAIN_BALLS, gb.N_SUPER_BALOTA)
 
-    counts = r_b.get("main_counts_dict", {})
-    mas_frec = [num for num, _ in sorted(counts.items(), key=lambda x: x[1], reverse=True)[:4]]
+    # 1. Balotas líderes por peso estocástico JAX / Markov / Bayes
+    top_jax = sorted(range(1, gb.N_MAIN_BALLS + 1), key=lambda x: weights[("main", x)], reverse=True)
 
+    # 2. Balotas con mayor madurez estadística por Hazard Rate Weibull / Atrasadas
     df_gaps = r_b.get("df_gap_analysis", pd.DataFrame())
     mas_atrasadas = []
     if not df_gaps.empty:
         main_gaps = df_gaps[df_gaps["Tipo"] == "Main"].sort_values("Brecha (Sorteos)", ascending=False)
-        mas_atrasadas = [int(x) for x in main_gaps["Número"].head(4).tolist()]
+        mas_atrasadas = [int(x) for x in main_gaps["Número"].head(6).tolist()]
 
+    # 3. Anclajes y resonancia cíclica
     anclajes = [x for x in info_sorteo["anclajes_principales"] if 1 <= x <= gb.N_MAIN_BALLS]
-    pivotes = [8, 4, 28, 10, 14]
     lag_8_balotas = info_sorteo.get("lag_8_data", {}).get("Baloto", {}).get("balotas", [])
 
-    # Selección integrada de 7 números clave:
-    # 2 de fecha/anclaje + 1 pivote histórico + 1 de resonancia Lag-8 + 2 frecuentes + 1 atrasada
+    # Construcción balanceada del pool de 7 números clave:
+    # - 3 balotas líderes absolutas en peso estocástico JAX (máximo momentum actual)
+    # - 2 balotas líderes en madurez por Hazard Rate (alta probabilidad de retorno)
+    # - 1 balota de resonancia cíclica Lag-8 o anclaje de fecha
+    # - 1 balota complementaria de alto peso JAX
     pool = set()
-    for num in anclajes[:2]:
+
+    # Top 3 momentum JAX
+    for num in top_jax:
         pool.add(num)
-    for num in pivotes:
-        if num not in pool:
-            pool.add(num)
+        if len(pool) >= 3:
             break
-    for num in lag_8_balotas:
-        if num not in pool:
-            pool.add(num)
-            break
-    for num in mas_frec:
-        if num not in pool:
-            pool.add(num)
-            if len(pool) >= 6:
-                break
+
+    # Top 2 Hazard Weibull
     for num in mas_atrasadas:
         if num not in pool:
             pool.add(num)
-            if len(pool) == 7:
+            if len(pool) >= 5:
                 break
 
-    # Si faltan para 7, rellenar de frecuentes o atrasadas
-    for num in mas_frec + mas_atrasadas:
-        if len(pool) < 7:
+    # 1 de resonancia cíclica o anclaje
+    for num in lag_8_balotas + anclajes:
+        if num not in pool:
             pool.add(num)
+            break
+
+    # Complementar hasta 7 con las siguientes líderes de JAX
+    for num in top_jax:
+        if num not in pool:
+            pool.add(num)
+            if len(pool) >= 7:
+                break
 
     pool = sorted(list(pool))
 
-    # Super Balotas reinas según el análisis de botes
-    top_sbs = [15, 10] if 15 in info_sorteo["sbs_reinas"]["Baloto"] else [11, 13]
+    # Super Balotas líderes: seleccionar las 2 con mayor peso estocástico JAX
+    top_sbs = sorted(range(1, gb.N_SUPER_BALOTA + 1), key=lambda x: weights[("sb", x)], reverse=True)[:2]
 
     tiquetes = []
     for b in BLOQUES_INDICES:

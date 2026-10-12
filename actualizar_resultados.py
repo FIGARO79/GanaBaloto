@@ -61,8 +61,21 @@ def obtener_todos_los_resultados():
             if "Baloto" not in heading.text or not heading.find("time"):
                 continue
 
-            # Extraer Número de Sorteo
-            match_sorteo = re.search(r"Resultado Baloto (\d+)", heading.text, re.IGNORECASE)
+            # Extraer Número de Sorteo (búsqueda flexible en heading, enlaces y contenedor)
+            match_sorteo = (
+                re.search(r"Baloto\s*(?:N[°º]|#|sorteo)?\s*(\d{4})", heading.text, re.IGNORECASE)
+                or re.search(r"sorteo\s*[:#-]?\s*(\d{4})", heading.text, re.IGNORECASE)
+                or re.search(r"Resultado\s+Baloto\s*[:#-]?\s*(\d+)", heading.text, re.IGNORECASE)
+            )
+            if not match_sorteo:
+                link = heading.find("a")
+                if link and link.get("title"):
+                    match_sorteo = re.search(r"sorteo\s*[:#-]?\s*(\d{4})", link.get("title"), re.IGNORECASE)
+            if not match_sorteo:
+                parent = heading.find_parent(class_="panel")
+                if parent:
+                    match_sorteo = re.search(r"sorteo\s*[:#-]?\s*(\d{4})", parent.text, re.IGNORECASE)
+
             sorteo_num = int(match_sorteo.group(1)) if match_sorteo else None
 
             # Extraer Fecha
@@ -157,7 +170,38 @@ def actualizar_json(lista_resultados):
             # En el JSON la fecha se guarda en formato YYYY-MM-DD
             df["Fecha"] = pd.to_datetime(df["Fecha"], errors="coerce")
 
+            # Determinar el último número de sorteo conocido
+            ultimo_sorteo = 0
+            if "Sorteo" in df.columns:
+                sorteos_val = df["Sorteo"].dropna()
+                sorteos_val = sorteos_val[sorteos_val > 0]
+                if not sorteos_val.empty:
+                    ultimo_sorteo = int(sorteos_val.iloc[-1])
+
             fechas_existentes = df["Fecha"].dt.date.dropna().tolist()
+
+            # 1. Actualizar sorteos o premios en registros existentes que tengan Sorteo == 0
+            for item in lista_resultados:
+                f_item = pd.to_datetime(item["Fecha"], dayfirst=True).date()
+                if f_item in fechas_existentes:
+                    idx = df[df["Fecha"].dt.date == f_item].index
+                    if not idx.empty:
+                        i = idx[0]
+                        sorteo_actual = int(df.loc[i, "Sorteo"]) if "Sorteo" in df.columns and not pd.isna(df.loc[i, "Sorteo"]) else 0
+                        if sorteo_actual == 0:
+                            nuevo_s = item.get("Sorteo") or (ultimo_sorteo + 1 if ultimo_sorteo > 0 else None)
+                            if nuevo_s:
+                                df.loc[i, "Sorteo"] = int(nuevo_s)
+                                cambios = True
+                                print(f"[✓] Actualizado número de sorteo #{nuevo_s} para {tipo} del {f_item}")
+                        p51 = int(item[tipo]["p51"])
+                        p50 = int(item[tipo]["p50"])
+                        if p51 > 0 and int(df.loc[i, "Premios 5+1"]) == 0:
+                            df.loc[i, "Premios 5+1"] = p51
+                            cambios = True
+                        if p50 > 0 and int(df.loc[i, "Premios 5+0"]) == 0:
+                            df.loc[i, "Premios 5+0"] = p50
+                            cambios = True
 
             nuevas_filas = []
             for item in reversed(lista_resultados):
@@ -165,8 +209,14 @@ def actualizar_json(lista_resultados):
 
                 if fecha_dt.date() not in fechas_existentes:
                     nums = item[tipo]["numeros"]
+                    sorteo_val = item.get("Sorteo")
+                    if not sorteo_val or int(sorteo_val) == 0:
+                        sorteo_val = ultimo_sorteo + 1 if ultimo_sorteo > 0 else 0
+                    if sorteo_val > 0:
+                        ultimo_sorteo = sorteo_val
+
                     nueva_fila = {
-                        "Sorteo": int(item["Sorteo"]) if item.get("Sorteo") is not None else None,
+                        "Sorteo": int(sorteo_val),
                         "Fecha": fecha_dt.strftime("%Y-%m-%d"),
                         "B1": int(nums[0]),
                         "B2": int(nums[1]),
@@ -178,31 +228,38 @@ def actualizar_json(lista_resultados):
                         "Premios 5+0": int(item[tipo]["p50"]),
                     }
                     nuevas_filas.append(nueva_fila)
-                    print(f"[+] Añadiendo {tipo} del {item['Fecha']} (Sorteo #{item.get('Sorteo')})")
+                    print(f"[+] Añadiendo {tipo} del {item['Fecha']} (Sorteo #{sorteo_val})")
 
             if nuevas_filas:
                 df_nuevas = pd.DataFrame(nuevas_filas)
                 df_nuevas["Fecha"] = pd.to_datetime(df_nuevas["Fecha"])
-                df_final = pd.concat([df, df_nuevas], ignore_index=True)
-                df_final = df_final.sort_values(by="Fecha").reset_index(drop=True)
-
-                df_final["Fecha"] = df_final["Fecha"].dt.strftime("%Y-%m-%d")
-                for col in [
-                    "Sorteo",
-                    "B1",
-                    "B2",
-                    "B3",
-                    "B4",
-                    "B5",
-                    "SB",
-                    "Premios 5+1",
-                    "Premios 5+0",
-                ]:
-                    if col in df_final.columns and not df_final[col].isnull().all():
-                        df_final[col] = df_final[col].fillna(0).astype(int)
-
-                dict_hojas[tipo] = df_final.to_dict(orient="records")
+                df = pd.concat([df, df_nuevas], ignore_index=True)
+                df = df.sort_values(by="Fecha").reset_index(drop=True)
                 cambios = True
+
+            # 2. Paso de auto-reparación: asegurar que ningún registro quede con Sorteo == 0
+            df["Fecha"] = df["Fecha"].dt.strftime("%Y-%m-%d")
+            for col in [
+                "Sorteo",
+                "B1",
+                "B2",
+                "B3",
+                "B4",
+                "B5",
+                "SB",
+                "Premios 5+1",
+                "Premios 5+0",
+            ]:
+                if col in df.columns and not df[col].isnull().all():
+                    df[col] = df[col].fillna(0).astype(int)
+
+            for i in range(len(df)):
+                if df.loc[i, "Sorteo"] == 0:
+                    if i > 0 and df.loc[i - 1, "Sorteo"] > 0:
+                        df.loc[i, "Sorteo"] = int(df.loc[i - 1, "Sorteo"]) + 1
+                        cambios = True
+
+            dict_hojas[tipo] = df.to_dict(orient="records")
 
         if not cambios:
             print("[!] No se encontraron sorteos nuevos.")

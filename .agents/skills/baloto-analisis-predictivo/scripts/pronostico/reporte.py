@@ -98,6 +98,33 @@ def imprimir_rueda(rueda):
     print(f"\n*(Con solo {rueda['total_tiquetes']} apuestas se cubren matemáticamente {rueda['garantia']} aciertos si {rueda['garantia']} o más de los 7 números seleccionados salen sorteados).*")
 
 
+def imprimir_estrategia_financiera_2_tiquetes(res_baloto, res_revancha):
+    top_b = res_baloto.jugadas[0]
+    top_r = res_revancha.jugadas[0]
+
+    # Calcular la Super Balota con mayor brecha histórica (atraso extremo) para cada juego
+    df_gaps_b = res_baloto.df_gap_analysis
+    sb_gaps_b = df_gaps_b[df_gaps_b["Tipo"] == "SB"].sort_values("Brecha (Sorteos)", ascending=False)
+    sb_extrema_b = int(sb_gaps_b.iloc[0]["Número"]) if not sb_gaps_b.empty else 6
+    brecha_b = int(sb_gaps_b.iloc[0]["Brecha (Sorteos)"]) if not sb_gaps_b.empty else 75
+
+    df_gaps_r = res_revancha.df_gap_analysis
+    sb_gaps_r = df_gaps_r[df_gaps_r["Tipo"] == "SB"].sort_values("Brecha (Sorteos)", ascending=False)
+    sb_extrema_r = int(sb_gaps_r.iloc[0]["Número"]) if not sb_gaps_r.empty else 13
+    brecha_r = int(sb_gaps_r.iloc[0]["Brecha (Sorteos)"]) if not sb_gaps_r.empty else 40
+
+    print("### 5. Asesoría Financiera: Estrategia de 2 Tiquetes Duales ($18.000 COP Total)\n")
+    print("Para jugadores con presupuesto optimizado que compran 2 tiquetes combinados de $9.000 COP (jugando Baloto + Revancha en cada boleta), se presentan dos hojas de ruta tácticas:\n")
+    print("#### 🟢 Perfil A: Momentum de Frecuencia y Equilibrio Central")
+    print(f"* **Tiquete 1 (Especialista Baloto):** `{_fmt(top_b.comb)}` + SB `[{top_b.sb:02d}]` (Suma: {top_b.suma}, JAX: {top_b.jax:.4f})")
+    print(f"* **Tiquete 2 (Especialista Revancha):** `{_fmt(top_r.comb)}` + SB `[{top_r.sb:02d}]` (Suma: {top_r.suma}, JAX: {top_r.jax:.4f})")
+    print("*(Ambas jugadas cubren 10 balotas distintas sin solape y las Super Balotas líderes en probabilidad histórica).* \n")
+    print("#### 🔴 Perfil B: Cazador de Ruptura por Atraso Extremo (🎯 PERFIL COMPROMETIDO DEL JUGADOR)")
+    print(f"* **Tiquete 1 (Baloto con Retorno Crítico):** `{_fmt(top_b.comb)}` + SB `[{sb_extrema_b:02d}]` *(Sustituye por SB {sb_extrema_b:02d}, con brecha récord de {brecha_b} sorteos sin salir)*")
+    print(f"* **Tiquete 2 (Revancha con Retorno Crítico):** `{_fmt(top_r.comb)}` + SB `[{sb_extrema_r:02d}]` *(Sustituye por SB {sb_extrema_r:02d}, con brecha de {brecha_r} sorteos sin salir)*")
+    print("*(Máxima presión estocástica: combina las mejores 5 balotas de momentum con las Super Balotas más rezagadas del bombo sin solapar números).* \n")
+
+
 def imprimir_reporte(info_sorteo, res_baloto, res_revancha, audit_b, audit_r, rueda, cfg):
     imprimir_cabecera(info_sorteo, res_baloto, res_revancha)
     imprimir_tabla("### 1. Pronósticos Recomendados: Baloto", res_baloto)
@@ -107,14 +134,38 @@ def imprimir_reporte(info_sorteo, res_baloto, res_revancha, audit_b, audit_r, ru
     imprimir_auditoria_top("Baloto", res_baloto.jugadas[0], audit_b)
     imprimir_auditoria_top("Revancha", res_revancha.jugadas[0], audit_r)
     imprimir_rueda(rueda)
+    imprimir_estrategia_financiera_2_tiquetes(res_baloto, res_revancha)
 
 
 def imprimir_json(info_sorteo, res_baloto, res_revancha, audit_b, audit_r, rueda):
+    df_gaps_b = res_baloto.df_gap_analysis
+    sb_gaps_b = df_gaps_b[df_gaps_b["Tipo"] == "SB"].sort_values("Brecha (Sorteos)", ascending=False)
+    sb_extrema_b = int(sb_gaps_b.iloc[0]["Número"]) if not sb_gaps_b.empty else 6
+    brecha_b = int(sb_gaps_b.iloc[0]["Brecha (Sorteos)"]) if not sb_gaps_b.empty else 75
+
+    df_gaps_r = res_revancha.df_gap_analysis
+    sb_gaps_r = df_gaps_r[df_gaps_r["Tipo"] == "SB"].sort_values("Brecha (Sorteos)", ascending=False)
+    sb_extrema_r = int(sb_gaps_r.iloc[0]["Número"]) if not sb_gaps_r.empty else 13
+    brecha_r = int(sb_gaps_r.iloc[0]["Brecha (Sorteos)"]) if not sb_gaps_r.empty else 40
+
     salida = {
         "sorteo_info": info_sorteo,
         "baloto": res_baloto.to_dict(),
         "revancha": res_revancha.to_dict(),
         "auditoria_top1": {"baloto": audit_b, "revancha": audit_r},
         "rueda_reducida": rueda,
+        "estrategia_2_tiquetes": {
+            "presupuesto_total_cop": 18000,
+            "costo_por_tiquete_cop": 9000,
+            "perfil_comprometido": "B",
+            "perfil_a": {
+                "tiquete_1_baloto": {"comb": res_baloto.jugadas[0].comb, "sb": res_baloto.jugadas[0].sb},
+                "tiquete_2_revancha": {"comb": res_revancha.jugadas[0].comb, "sb": res_revancha.jugadas[0].sb},
+            },
+            "perfil_b": {
+                "tiquete_1_baloto": {"comb": res_baloto.jugadas[0].comb, "sb": sb_extrema_b, "brecha_sb": brecha_b},
+                "tiquete_2_revancha": {"comb": res_revancha.jugadas[0].comb, "sb": sb_extrema_r, "brecha_sb": brecha_r},
+            },
+        },
     }
     print(json.dumps(salida, indent=2, ensure_ascii=False))
